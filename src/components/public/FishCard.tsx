@@ -1,0 +1,100 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Fish } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import type { FishCardData } from "@/types/fish";
+
+const waterTypeStyles: Record<string, string> = {
+  freshwater: "bg-blue-50 text-blue-700 border-blue-200",
+  saltwater: "bg-cyan-50 text-cyan-700 border-cyan-200",
+  brackish: "bg-purple-50 text-purple-700 border-purple-200",
+};
+
+const difficultyStyles: Record<string, string> = {
+  beginner: "bg-green-50 text-green-700 border-green-200",
+  intermediate: "bg-amber-50 text-amber-700 border-amber-200",
+  expert: "bg-red-50 text-red-700 border-red-200",
+};
+
+interface FishCardProps {
+  fish: FishCardData;
+}
+
+export function FishCard({ fish }: FishCardProps) {
+  const waterKey = fish.water_type?.toLowerCase() ?? "";
+  const diffKey = fish.difficulty_level?.toLowerCase() ?? "";
+
+  return (
+    <Link href={`/wiki/${fish.slug}`} className="group block">
+      <Card className="overflow-hidden border border-slate-200 transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-teal-200 h-full">
+        <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+          {fish.primary_image ? (
+            <Image
+              src={fish.primary_image}
+              alt={fish.primary_image_alt ?? fish.common_name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300">
+              <Fish className="h-12 w-12" />
+              <span className="text-xs text-slate-400">No image</span>
+            </div>
+          )}
+        </div>
+
+        <CardContent className="p-4">
+          <h3 className="font-semibold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors">
+            {fish.common_name}
+          </h3>
+          <p className="mt-0.5 text-sm italic text-slate-500 truncate">
+            {fish.scientific_name}
+          </p>
+
+          {(fish.water_type || fish.difficulty_level) && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {fish.water_type && (
+                <Badge
+                  variant="outline"
+                  className={cn("text-xs capitalize font-normal", waterTypeStyles[waterKey])}
+                >
+                  {fish.water_type}
+                </Badge>
+              )}
+              {fish.difficulty_level && (
+                <Badge
+                  variant="outline"
+                  className={cn("text-xs capitalize font-normal", difficultyStyles[diffKey])}
+                >
+                  {fish.difficulty_level}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {fish.labels.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {fish.labels.slice(0, 3).map((label) => (
+                <span
+                  key={label.id}
+                  className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
+                  style={label.color ? { backgroundColor: `${label.color}20`, color: label.color } : undefined}
+                >
+                  {label.name}
+                </span>
+              ))}
+              {fish.labels.length > 3 && (
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                  +{fish.labels.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}

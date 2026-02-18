@@ -1,33 +1,186 @@
+import { Suspense } from "react";
+import { Fish } from "lucide-react";
 import { createPublicClient } from "@/lib/supabase/public";
-import Link from "next/link";
+import { FishCard } from "@/components/public/FishCard";
+import { SearchBar } from "@/components/public/SearchBar";
+import { LabelFilter } from "@/components/public/LabelFilter";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { FishCardData, FishLabel } from "@/types/fish";
 
-export const revalidate = 300; // ISR every 5 minutes
+interface WikiPageProps {
+  searchParams: Promise<{ q?: string; label?: string; water_type?: string }>;
+}
 
-export default async function WikiPage() {
+async function FishGrid({ searchParams }: WikiPageProps) {
+  const { q, label, water_type } = await searchParams;
   const supabase = createPublicClient();
 
-  const { data: fish } = await supabase
+  let query = supabase
     .from("fish_species")
-    .select("id, slug, common_name, scientific_name")
+    .select(
+      `
+      id, slug, common_name, scientific_name, water_type, difficulty_level,
+      fish_images(image_url, alt_text, is_primary),
+      fish_labels(labels(id, name, color))
+    `
+    )
     .eq("published", true)
     .order("common_name");
 
-  return (
-    <main className="mx-auto max-w-4xl p-6">
-      <h1 className="mb-6 text-3xl font-bold">Fish Species</h1>
+  if (q?.trim()) {
+    query = query.or(
+      `common_name.ilike.%${q.trim()}%,scientific_name.ilike.%${q.trim()}%`
+    );
+  }
 
-      <div className="grid gap-4">
-        {fish?.map((f) => (
-          <Link
-            key={f.id}
-            href={`/wiki/${f.slug}`}
-            className="rounded border p-4 hover:bg-gray-100"
-          >
-            <h2 className="text-xl font-semibold">{f.common_name}</h2>
-            <p className="text-gray-600 italic">{f.scientific_name}</p>
-          </Link>
+  if (water_type) {
+    query = query.ilike("water_type", water_type);
+  }
+
+  const { data: fishData } = await query;
+
+  // Transform raw Supabase rows into FishCardData shape
+  let fish: FishCardData[] = (fishData ?? []).map((f) => {
+    const images = (f.fish_images as Array<{
+      image_url: string;
+      alt_text: string | null;
+      is_primary: boolean;
+    }>) ?? [];
+    const primaryImage = images.find((img) => img.is_primary) ?? images[0] ?? null;
+
+    const rawLabels = f.fish_labels as unknown as Array<{
+      labels: FishLabel | FishLabel[] | null;
+    }>;
+    const labels: FishLabel[] =
+      rawLabels?.flatMap((fl) => {
+        const l = fl.labels;
+        if (!l) return [];
+        return Array.isArray(l) ? l : [l];
+      }) ?? [];
+
+    return {
+      id: f.id,
+      slug: f.slug,
+      common_name: f.common_name,
+      scientific_name: f.scientific_name,
+      water_type: f.water_type,
+      difficulty_level: f.difficulty_level,
+      primary_image: primaryImage?.image_url ?? null,
+      primary_image_alt: primaryImage?.alt_text ?? null,
+      labels,
+    };
+  });
+
+  // Filter by label client-side after fetch
+  if (label) {
+    fish = fish.filter((f) => f.labels.some((l) => l.id === label));
+  }
+
+  if (fish.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
+          <Fish className="h-10 w-10 text-slate-300" />
+        </div>
+        <h3 className="text-lg font-semibold text-slate-800">No fish found</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          {q
+            ? `No results for "${q}". Try a different search term.`
+            : "No species match the current filters."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <p className="mb-4 text-sm text-slate-500">
+        <span className="font-medium text-slate-700">{fish.length}</span>{" "}
+        {fish.length === 1 ? "species" : "species"} found
+        {q ? (
+          <>
+            {" "}for{" "}
+            <span className="font-medium text-slate-900">&ldquo;{q}&rdquo;</span>
+          </>
+        ) : null}
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {fish.map((f) => (
+          <FishCard key={f.id} fish={f} />
         ))}
       </div>
-    </main>
+    </>
+  );
+}
+
+function FishGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-slate-200 overflow-hidden">
+          <Skeleton className="aspect-4/3 w-full" />
+          <div className="p-4 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+            <div className="flex gap-1.5 mt-3">
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function LabelsSection() {
+  const supabase = createPublicClient();
+  const { data: labels } = await supabase
+    .from("labels")
+    .select("id, name, color")
+    .order("name");
+
+  if (!labels || labels.length === 0) return null;
+
+  return (
+    <div className="mb-6">
+      <Suspense fallback={null}>
+        <LabelFilter labels={labels} />
+      </Suspense>
+    </div>
+  );
+}
+
+export default async function WikiPage({ searchParams }: WikiPageProps) {
+  const { water_type } = await searchParams;
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Fish Species</h1>
+        <p className="mt-1 text-slate-500">
+          {water_type
+            ? `Showing ${water_type} fish`
+            : "Explore our comprehensive database of aquatic species"}
+        </p>
+      </div>
+
+      {/* Search */}
+      <div className="mb-6">
+        <Suspense fallback={null}>
+          <SearchBar />
+        </Suspense>
+      </div>
+
+      {/* Label Filter */}
+      <LabelsSection />
+
+      {/* Grid */}
+      <Suspense fallback={<FishGridSkeleton />}>
+        <FishGrid searchParams={searchParams} />
+      </Suspense>
+    </div>
   );
 }
