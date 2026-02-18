@@ -19,8 +19,8 @@ export default async function AdminPage() {
       icon: Fish,
       href: "/admin/fish",
       newHref: "/admin/fish/new",
-      color: "text-teal-600",
-      bg: "bg-teal-50",
+      color: "text-teal-600 dark:text-teal-400",
+      bg: "bg-teal-50 dark:bg-teal-950/40",
     },
     {
       label: "Labels",
@@ -28,8 +28,8 @@ export default async function AdminPage() {
       icon: Tag,
       href: "/admin/labels",
       newHref: "/admin/labels/new",
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      color: "text-violet-600 dark:text-violet-400",
+      bg: "bg-violet-50 dark:bg-violet-950/40",
     },
     {
       label: "Water Profiles",
@@ -37,23 +37,23 @@ export default async function AdminPage() {
       icon: Droplets,
       href: "/admin/water-profiles",
       newHref: "/admin/water-profiles/new",
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-950/40",
     },
   ];
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-slate-500">Manage your fish wiki content.</p>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-400">Manage your fish wiki content.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`rounded-lg p-2.5 ${stat.bg}`}>
@@ -61,7 +61,7 @@ export default async function AdminPage() {
               </div>
               <Link
                 href={stat.newHref}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-600 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 <Plus className="h-3 w-3" />
                 New
