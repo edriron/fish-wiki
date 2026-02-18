@@ -32,7 +32,7 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
 
   return (
     <section>
-      <h2 className="text-xl font-semibold text-slate-900 mb-3">Gallery</h2>
+      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Gallery</h2>
       <Separator className="mb-4" />
 
       {/* Variant tabs — only shown when variants exist */}
@@ -44,7 +44,7 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
               "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
               selectedVariant === null
                 ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"
+                : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-600 dark:hover:text-teal-400"
             )}
           >
             Standard
@@ -74,7 +74,7 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {visibleImages.map((img) => (
             <div key={img.id} className="group">
-              <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+              <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800">
                 <Image
                   src={img.image_url}
                   alt={img.alt_text ?? fishName}
@@ -93,9 +93,9 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
         </div>
       ) : (
         /* Empty state for a variant that has no images yet */
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
-          <Fish className="mb-2 h-8 w-8 text-slate-300" />
-          <p className="text-sm text-slate-400">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-700 dark:bg-slate-900">
+          <Fish className="mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
+          <p className="text-sm text-slate-400 dark:text-slate-500">
             No images for this variant yet.
           </p>
         </div>

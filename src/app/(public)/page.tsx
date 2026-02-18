@@ -12,9 +12,9 @@ const waterTypeCards = [
     description:
       "Rivers, lakes, and streams. Home to species like goldfish, bettas, tetras, and thousands more.",
     icon: Droplets,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    border: "border-blue-100",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    border: "border-blue-100 dark:border-blue-900/60",
     query: "freshwater",
   },
   {
@@ -22,9 +22,9 @@ const waterTypeCards = [
     description:
       "Oceans and coral reefs. Explore clownfish, tangs, lionfish, and the vast marine world.",
     icon: Waves,
-    color: "text-cyan-600",
-    bg: "bg-cyan-50",
-    border: "border-cyan-100",
+    color: "text-cyan-600 dark:text-cyan-400",
+    bg: "bg-cyan-50 dark:bg-cyan-950/40",
+    border: "border-cyan-100 dark:border-cyan-900/60",
     query: "saltwater",
   },
   {
@@ -32,9 +32,9 @@ const waterTypeCards = [
     description:
       "Where salt meets fresh — estuaries and mangroves. Unique species adapted to mixed waters.",
     icon: Fish,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-    border: "border-purple-100",
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-950/40",
+    border: "border-purple-100 dark:border-purple-900/60",
     query: "brackish",
   },
 ];
@@ -111,10 +111,10 @@ export default async function HomePage() {
       {/* Water Type Cards */}
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-slate-900">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Browse by Water Type
           </h2>
-          <p className="mt-2 text-slate-500">
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
             Find fish suited to your aquarium environment
           </p>
         </div>
@@ -133,10 +133,10 @@ export default async function HomePage() {
                   <div className={`mb-4 inline-flex rounded-xl p-3 bg-white/60`}>
                     <card.icon className={`h-6 w-6 ${card.color}`} />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-900">
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {card.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                     {card.description}
                   </p>
                   <div

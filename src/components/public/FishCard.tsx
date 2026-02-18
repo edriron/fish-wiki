@@ -28,7 +28,7 @@ export function FishCard({ fish }: FishCardProps) {
 
   return (
     <Link href={`/wiki/${fish.slug}`} className="group block">
-      <Card className="overflow-hidden border border-slate-200 transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-teal-200 h-full">
+      <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-teal-200 h-full">
         <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
           {fish.primary_image ? (
             <Image
@@ -39,18 +39,20 @@ export function FishCard({ fish }: FishCardProps) {
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300">
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300 dark:text-slate-600">
               <Fish className="h-12 w-12" />
-              <span className="text-xs text-slate-400">No image</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500">
+                No image
+              </span>
             </div>
           )}
         </div>
 
         <CardContent className="p-4">
-          <h3 className="font-semibold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors">
+          <h3 className="font-semibold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors dark:text-slate-100 dark:group-hover:text-teal-400">
             {fish.common_name}
           </h3>
-          <p className="mt-0.5 text-sm italic text-slate-500 truncate">
+          <p className="mt-0.5 text-sm italic text-slate-500 truncate dark:text-slate-400">
             {fish.scientific_name}
           </p>
 
@@ -59,7 +61,10 @@ export function FishCard({ fish }: FishCardProps) {
               {fish.water_type && (
                 <Badge
                   variant="outline"
-                  className={cn("text-xs capitalize font-normal", waterTypeStyles[waterKey])}
+                  className={cn(
+                    "text-xs capitalize font-normal",
+                    waterTypeStyles[waterKey],
+                  )}
                 >
                   {fish.water_type}
                 </Badge>
@@ -67,7 +72,10 @@ export function FishCard({ fish }: FishCardProps) {
               {fish.difficulty_level && (
                 <Badge
                   variant="outline"
-                  className={cn("text-xs capitalize font-normal", difficultyStyles[diffKey])}
+                  className={cn(
+                    "text-xs capitalize font-normal",
+                    difficultyStyles[diffKey],
+                  )}
                 >
                   {fish.difficulty_level}
                 </Badge>
@@ -80,14 +88,21 @@ export function FishCard({ fish }: FishCardProps) {
               {fish.labels.slice(0, 3).map((label) => (
                 <span
                   key={label.id}
-                  className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
-                  style={label.color ? { backgroundColor: `${label.color}20`, color: label.color } : undefined}
+                  className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                  style={
+                    label.color
+                      ? {
+                          backgroundColor: `${label.color}20`,
+                          color: label.color,
+                        }
+                      : undefined
+                  }
                 >
                   {label.name}
                 </span>
               ))}
               {fish.labels.length > 3 && (
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
                   +{fish.labels.length - 3}
                 </span>
               )}

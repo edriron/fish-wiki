@@ -142,7 +142,6 @@ export default async function FishPage({
   });
 
   const primaryImage = images[0] ?? null;
-  const galleryImages = images.slice(1);
 
   const rawLabels = fish.fish_labels as unknown as Array<{
     labels: FishLabel | FishLabel[] | null;
@@ -230,7 +229,7 @@ export default async function FishPage({
       </div>
 
       {/* Breadcrumb + Back */}
-      <div className="border-b bg-white">
+      <div className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between">
           <Breadcrumb>
             <BreadcrumbList>
@@ -250,7 +249,7 @@ export default async function FishPage({
 
           <Link
             href="/wiki"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-700 transition-colors dark:text-slate-400 dark:hover:text-teal-400"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Wiki
@@ -295,11 +294,11 @@ export default async function FishPage({
             {/* Description */}
             {fish.description && (
               <section>
-                <h2 className="text-xl font-semibold text-slate-900 mb-3">
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">
                   About
                 </h2>
                 <Separator className="mb-4" />
-                <p className="text-slate-600 leading-relaxed text-base">
+                <p className="text-slate-600 leading-relaxed text-base dark:text-slate-300">
                   {fish.description}
                 </p>
               </section>
@@ -307,16 +306,16 @@ export default async function FishPage({
 
             {/* Gallery */}
             <VariantGallery
-              images={galleryImages}
+              images={images}
               variants={variants}
               fishName={fish.common_name}
             />
 
             {/* Empty state */}
-            {!fish.description && galleryImages.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50">
-                <Fish className="h-12 w-12 text-slate-300 mb-3" />
-                <p className="text-slate-500">
+            {!fish.description && images.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-dashed border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900">
+                <Fish className="h-12 w-12 text-slate-300 mb-3 dark:text-slate-600" />
+                <p className="text-slate-500 dark:text-slate-400">
                   Detailed information coming soon.
                 </p>
               </div>
@@ -326,23 +325,23 @@ export default async function FishPage({
           {/* Right column: Classification + Water Parameters */}
           <div className="space-y-6">
             {/* Classification Card */}
-            <Card className="border-slate-200 shadow-sm">
+            <Card className="border-slate-200 shadow-sm dark:border-slate-700">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-slate-900">
+                <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
                   Classification
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
                 {/* Scientific name */}
                 <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                    <Globe className="h-4 w-4 text-slate-500" />
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                    <Globe className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                       Scientific Name
                     </p>
-                    <p className="mt-0.5 italic font-medium text-slate-800">
+                    <p className="mt-0.5 italic font-medium text-slate-800 dark:text-slate-200">
                       {fish.scientific_name}
                     </p>
                   </div>
@@ -352,14 +351,14 @@ export default async function FishPage({
                   <>
                     <Separator />
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <MapPin className="h-4 w-4 text-slate-500" />
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <MapPin className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Origin Region
                         </p>
-                        <p className="mt-0.5 font-medium text-slate-800">
+                        <p className="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
                           {fish.origin_region}
                         </p>
                       </div>
@@ -371,11 +370,11 @@ export default async function FishPage({
                   <>
                     <Separator />
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <Droplets className="h-4 w-4 text-slate-500" />
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <Droplets className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Water Type
                         </p>
                         <div className="mt-1">
@@ -395,11 +394,11 @@ export default async function FishPage({
                   <>
                     <Separator />
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <Utensils className="h-4 w-4 text-slate-500" />
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <Utensils className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Diet
                         </p>
                         <div className="mt-1">
@@ -414,7 +413,7 @@ export default async function FishPage({
                               {dietCfg.label}
                             </Badge>
                           ) : (
-                            <p className="font-medium text-slate-800 capitalize">
+                            <p className="font-medium text-slate-800 capitalize dark:text-slate-200">
                               {fish.diet}
                             </p>
                           )}
@@ -428,11 +427,11 @@ export default async function FishPage({
                   <>
                     <Separator />
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-                        <Gauge className="h-4 w-4 text-slate-500" />
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <Gauge className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Care Difficulty
                         </p>
                         <div className="mt-1">
@@ -447,7 +446,7 @@ export default async function FishPage({
                               {diffCfg.label}
                             </Badge>
                           ) : (
-                            <p className="capitalize font-medium text-slate-800">
+                            <p className="capitalize font-medium text-slate-800 dark:text-slate-200">
                               {fish.difficulty_level}
                             </p>
                           )}

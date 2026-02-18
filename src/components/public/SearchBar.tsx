@@ -51,7 +51,7 @@ export function SearchBar({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
-          className="pl-9 pr-9 h-10 border-slate-200 focus-visible:ring-teal-500"
+          className="pl-9 pr-9 h-10 border-slate-200 dark:border-slate-700 focus-visible:ring-1 focus-visible:ring-teal-500"
         />
         {value && (
           <button

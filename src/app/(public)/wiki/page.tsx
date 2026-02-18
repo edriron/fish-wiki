@@ -22,14 +22,14 @@ async function FishGrid({ searchParams }: WikiPageProps) {
       id, slug, common_name, scientific_name, water_type, difficulty_level,
       fish_images(image_url, alt_text, is_primary),
       fish_labels(labels(id, name, color))
-    `
+    `,
     )
     .eq("published", true)
     .order("common_name");
 
   if (q?.trim()) {
     query = query.or(
-      `common_name.ilike.%${q.trim()}%,scientific_name.ilike.%${q.trim()}%`
+      `common_name.ilike.%${q.trim()}%,scientific_name.ilike.%${q.trim()}%`,
     );
   }
 
@@ -41,12 +41,14 @@ async function FishGrid({ searchParams }: WikiPageProps) {
 
   // Transform raw Supabase rows into FishCardData shape
   let fish: FishCardData[] = (fishData ?? []).map((f) => {
-    const images = (f.fish_images as Array<{
-      image_url: string;
-      alt_text: string | null;
-      is_primary: boolean;
-    }>) ?? [];
-    const primaryImage = images.find((img) => img.is_primary) ?? images[0] ?? null;
+    const images =
+      (f.fish_images as Array<{
+        image_url: string;
+        alt_text: string | null;
+        is_primary: boolean;
+      }>) ?? [];
+    const primaryImage =
+      images.find((img) => img.is_primary) ?? images[0] ?? null;
 
     const rawLabels = f.fish_labels as unknown as Array<{
       labels: FishLabel | FishLabel[] | null;
@@ -79,11 +81,13 @@ async function FishGrid({ searchParams }: WikiPageProps) {
   if (fish.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-          <Fish className="h-10 w-10 text-slate-300" />
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+          <Fish className="h-10 w-10 text-slate-300 dark:text-slate-600" />
         </div>
-        <h3 className="text-lg font-semibold text-slate-800">No fish found</h3>
-        <p className="mt-1 text-sm text-slate-500">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+          No fish found
+        </h3>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {q
             ? `No results for "${q}". Try a different search term.`
             : "No species match the current filters."}
@@ -94,13 +98,18 @@ async function FishGrid({ searchParams }: WikiPageProps) {
 
   return (
     <>
-      <p className="mb-4 text-sm text-slate-500">
-        <span className="font-medium text-slate-700">{fish.length}</span>{" "}
+      <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+        <span className="font-medium text-slate-700 dark:text-slate-300">
+          {fish.length}
+        </span>{" "}
         {fish.length === 1 ? "species" : "species"} found
         {q ? (
           <>
-            {" "}for{" "}
-            <span className="font-medium text-slate-900">&ldquo;{q}&rdquo;</span>
+            {" "}
+            for{" "}
+            <span className="font-medium text-slate-900 dark:text-slate-100">
+              &ldquo;{q}&rdquo;
+            </span>
           </>
         ) : null}
       </p>
@@ -118,7 +127,10 @@ function FishGridSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-slate-200 overflow-hidden">
+        <div
+          key={i}
+          className="rounded-xl border border-slate-200 overflow-hidden dark:border-slate-700"
+        >
           <Skeleton className="aspect-4/3 w-full" />
           <div className="p-4 space-y-2">
             <Skeleton className="h-4 w-3/4" />
@@ -159,8 +171,10 @@ export default async function WikiPage({ searchParams }: WikiPageProps) {
     <div className="mx-auto max-w-7xl px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Fish Species</h1>
-        <p className="mt-1 text-slate-500">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          Fish Species
+        </h1>
+        <p className="mt-1 text-slate-500 dark:text-slate-400">
           {water_type
             ? `Showing ${water_type} fish`
             : "Explore our comprehensive database of aquatic species"}

@@ -17,7 +17,7 @@ interface WaterParametersCardProps {
 
 function formatRange(
   min: number | null | undefined,
-  max: number | null | undefined
+  max: number | null | undefined,
 ): string | null {
   if (min == null && max == null) return null;
   if (min != null && max != null) return `${min}–${max}`;
@@ -39,15 +39,15 @@ function ParamRow({ icon, label, value, unit, first = false }: ParamRowProps) {
       {!first && <Separator />}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
             {icon}
           </div>
-          <p className="text-sm text-slate-600">{label}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{label}</p>
         </div>
-        <p className="text-sm font-semibold text-slate-900 tabular-nums shrink-0">
+        <p className="text-sm font-semibold text-slate-900 tabular-nums shrink-0 dark:text-slate-100">
           {value}
           {unit && (
-            <span className="ml-1 text-xs font-normal text-slate-400">
+            <span className="ml-1 text-xs font-normal text-slate-400 dark:text-slate-500">
               {unit}
             </span>
           )}
@@ -74,8 +74,7 @@ export function WaterParametersCard({
   const gh = formatRange(gh_min, gh_max);
   const kh = formatRange(kh_min, kh_max);
 
-  const hasAnyParam =
-    temp || ph || gh || kh || min_tank_liters != null;
+  const hasAnyParam = temp || ph || gh || kh || min_tank_liters != null;
 
   if (!hasAnyParam) return null;
 
@@ -117,14 +116,14 @@ export function WaterParametersCard({
   }>;
 
   return (
-    <Card className="border-slate-200 shadow-sm">
+    <Card className="border-slate-200 shadow-sm dark:border-slate-700">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold text-slate-900">
+          <CardTitle className="text-base font-semibold text-slate-900 dark:text-slate-100">
             Water Requirements
           </CardTitle>
           {profile_name && (
-            <span className="rounded-full bg-teal-50 border border-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+            <span className="rounded-full bg-teal-50 border border-teal-100 px-2.5 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:border-teal-800 dark:text-teal-400">
               {profile_name}
             </span>
           )}
