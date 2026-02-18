@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({
   children,
@@ -16,18 +17,22 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  // Check role
   const { data: role } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", user.id)
     .single();
 
-  console.log("data: ", role, user.id);
-
   if (!role || role.role !== "admin") {
     redirect("/");
   }
 
-  return <div className="p-6">{children}</div>;
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      <AdminNav />
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-5xl px-8 py-8">{children}</div>
+      </main>
+    </div>
+  );
 }

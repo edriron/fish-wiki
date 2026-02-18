@@ -6,7 +6,10 @@
       "Bash(node -e:*)",
       "Bash(dir:*)",
       "Bash(cmd /c \"dir C:\\\\Projects\\\\fish-wiki\\\\node_modules\\\\lucide-react 2>&1\")",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npx shadcn:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx next build)"
     ]
   }
 }
