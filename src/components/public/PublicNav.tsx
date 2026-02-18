@@ -10,12 +10,12 @@ export function PublicNav() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/wiki", label: "Wiki" },
-    { href: "/wiki?q=", label: "Search" },
+    { href: "/wiki",    label: "Wiki",   showActive: false },
+    { href: "/wiki?q=", label: "Search", showActive: false },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/80 dark:bg-slate-900/95 dark:border-slate-800">
+    <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-slate-900 dark:border-slate-800">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
         <Link
           href="/"
@@ -34,7 +34,7 @@ export function PublicNav() {
               href={link.href}
               className={cn(
                 "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                pathname === link.href.split("?")[0]
+                link.showActive && pathname === link.href.split("?")[0]
                   ? "bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               )}
