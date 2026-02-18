@@ -60,51 +60,51 @@ const difficultyConfig: Record<
 > = {
   beginner: {
     label: "Beginner",
-    color: "text-green-700 bg-green-50 border-green-200",
+    color: "text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950/40 dark:border-green-900",
     dot: "bg-green-500",
   },
   easy: {
     label: "Easy",
-    color: "text-green-700 bg-green-50 border-green-200",
+    color: "text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950/40 dark:border-green-900",
     dot: "bg-green-500",
   },
   intermediate: {
     label: "Intermediate",
-    color: "text-amber-700 bg-amber-50 border-amber-200",
+    color: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-900",
     dot: "bg-amber-500",
   },
   expert: {
     label: "Expert",
-    color: "text-red-700 bg-red-50 border-red-200",
+    color: "text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/40 dark:border-red-900",
     dot: "bg-red-500",
   },
 };
 
 const waterTypeConfig: Record<string, { label: string; color: string }> = {
-  freshwater: { label: "Freshwater", color: "text-blue-700 bg-blue-50 border-blue-200" },
-  saltwater: { label: "Saltwater", color: "text-cyan-700 bg-cyan-50 border-cyan-200" },
-  brackish: { label: "Brackish", color: "text-purple-700 bg-purple-50 border-purple-200" },
+  freshwater: { label: "Freshwater", color: "text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/40 dark:border-blue-900" },
+  saltwater:  { label: "Saltwater",  color: "text-cyan-700 bg-cyan-50 border-cyan-200 dark:text-cyan-400 dark:bg-cyan-950/40 dark:border-cyan-900" },
+  brackish:   { label: "Brackish",   color: "text-purple-700 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950/40 dark:border-purple-900" },
 };
 
 const dietConfig: Record<string, { label: string; color: string; dot: string }> = {
   carnivore: {
     label: "Carnivore",
-    color: "text-red-700 bg-red-50 border-red-200",
+    color: "text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/40 dark:border-red-900",
     dot: "bg-red-500",
   },
   omnivore: {
     label: "Omnivore",
-    color: "text-amber-700 bg-amber-50 border-amber-200",
+    color: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/40 dark:border-amber-900",
     dot: "bg-amber-500",
   },
   herbivore: {
     label: "Herbivore",
-    color: "text-green-700 bg-green-50 border-green-200",
+    color: "text-green-700 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950/40 dark:border-green-900",
     dot: "bg-green-500",
   },
   "algae eater": {
     label: "Algae Eater",
-    color: "text-teal-700 bg-teal-50 border-teal-200",
+    color: "text-teal-700 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-950/40 dark:border-teal-900",
     dot: "bg-teal-500",
   },
 };
