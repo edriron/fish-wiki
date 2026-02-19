@@ -12,7 +12,6 @@ export function PublicNav() {
 
   const links = [
     { href: "/wiki", label: "Wiki", showActive: true },
-    { href: "/wiki?q=", label: "Search", showActive: false },
   ];
 
   return (
@@ -36,7 +35,7 @@ export function PublicNav() {
               href={link.href}
               className={cn(
                 "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                pathname === link.href.split("?")[0]
+                link.showActive && pathname.startsWith(link.href.split("?")[0])
                   ? "bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
               )}

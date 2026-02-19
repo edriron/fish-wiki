@@ -408,8 +408,8 @@ export function FishForm({
       {/* Section: Labels */}
       {allLabels.length > 0 && (
         <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-          <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-            <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+          <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
               Labels
             </h2>
           </div>
