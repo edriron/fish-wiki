@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 function num(v: FormDataEntryValue | null): number | null {
   if (!v || v === "") return null;
@@ -34,7 +33,7 @@ export async function createWaterProfile(formData: FormData) {
   }
 
   revalidatePath("/admin/water-profiles");
-  redirect("/admin/water-profiles");
+  return { success: true, redirectTo: "/admin/water-profiles" };
 }
 
 export async function updateWaterProfile(id: string, formData: FormData) {
@@ -64,12 +63,12 @@ export async function updateWaterProfile(id: string, formData: FormData) {
   }
 
   revalidatePath("/admin/water-profiles");
-  return { success: true };
+  return { success: true, redirectTo: "/admin/water-profiles" };
 }
 
 export async function deleteWaterProfile(id: string) {
   const supabase = await createClient();
   await supabase.from("water_profiles").delete().eq("id", id);
   revalidatePath("/admin/water-profiles");
-  redirect("/admin/water-profiles");
+  return { success: true, redirectTo: "/admin/water-profiles" };
 }

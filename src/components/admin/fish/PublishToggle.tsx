@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Globe, GlobeLock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { toggleFishPublished } from "@/app/actions/fish";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +17,10 @@ export function PublishToggle({ fishId, published }: PublishToggleProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleToggle = () => {
+    const next = !published;
     startTransition(async () => {
-      await toggleFishPublished(fishId, !published);
+      await toggleFishPublished(fishId, next);
+      toast.success(next ? "Published." : "Set to draft.");
       router.refresh();
     });
   };

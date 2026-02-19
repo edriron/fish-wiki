@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { deleteLabel } from "@/app/actions/labels";
 
 interface LabelDeleteButtonProps {
@@ -17,8 +18,9 @@ export function LabelDeleteButton({ labelId, labelName }: LabelDeleteButtonProps
   const handleDelete = () => {
     if (!confirm(`Delete label "${labelName}"? This cannot be undone.`)) return;
     startTransition(async () => {
-      await deleteLabel(labelId);
-      router.refresh();
+      const result = await deleteLabel(labelId);
+      toast.success(`Label "${labelName}" deleted.`);
+      router.push(result.redirectTo);
     });
   };
 

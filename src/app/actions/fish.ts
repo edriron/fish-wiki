@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { toSlug } from "@/lib/slug";
 
 export async function createFish(formData: FormData) {
@@ -41,6 +40,9 @@ export async function createFish(formData: FormData) {
     .single();
 
   if (error || !fish) {
+    if (error?.code === "23505") {
+      return { error: "A fish species with this name (or slug) already exists." };
+    }
     return { error: error?.message ?? "Failed to create fish" };
   }
 
@@ -52,7 +54,7 @@ export async function createFish(formData: FormData) {
 
   revalidatePath("/admin/fish");
   revalidatePath("/wiki");
-  redirect(`/admin/fish/${fish.id}/edit`);
+  return { success: true, redirectTo: "/admin/fish" };
 }
 
 export async function updateFish(id: string, formData: FormData) {
@@ -105,7 +107,7 @@ export async function updateFish(id: string, formData: FormData) {
   revalidatePath("/admin/fish");
   revalidatePath(`/wiki/${slug}`);
   revalidatePath("/wiki");
-  return { success: true };
+  return { success: true, redirectTo: "/admin/fish" };
 }
 
 export async function deleteFish(id: string) {
@@ -113,7 +115,7 @@ export async function deleteFish(id: string) {
   await supabase.from("fish_species").delete().eq("id", id);
   revalidatePath("/admin/fish");
   revalidatePath("/wiki");
-  redirect("/admin/fish");
+  return { success: true, redirectTo: "/admin/fish" };
 }
 
 export async function toggleFishPublished(id: string, published: boolean) {

@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 export async function createLabel(formData: FormData) {
   const supabase = await createClient();
@@ -20,7 +19,7 @@ export async function createLabel(formData: FormData) {
 
   revalidatePath("/admin/labels");
   revalidatePath("/wiki");
-  redirect("/admin/labels");
+  return { success: true, redirectTo: "/admin/labels" };
 }
 
 export async function updateLabel(id: string, formData: FormData) {
@@ -40,7 +39,7 @@ export async function updateLabel(id: string, formData: FormData) {
 
   revalidatePath("/admin/labels");
   revalidatePath("/wiki");
-  return { success: true };
+  return { success: true, redirectTo: "/admin/labels" };
 }
 
 export async function deleteLabel(id: string) {
@@ -48,5 +47,5 @@ export async function deleteLabel(id: string) {
   await supabase.from("labels").delete().eq("id", id);
   revalidatePath("/admin/labels");
   revalidatePath("/wiki");
-  redirect("/admin/labels");
+  return { success: true, redirectTo: "/admin/labels" };
 }

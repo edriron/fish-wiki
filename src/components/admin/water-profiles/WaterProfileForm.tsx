@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Save, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Save, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { AiButton } from "@/components/admin/AiButton";
 import { createWaterProfile, updateWaterProfile } from "@/app/actions/water-profiles";
 import type { WaterProfile } from "@/types/fish";
@@ -73,9 +75,9 @@ function RangeRow({
 
 export function WaterProfileForm({ profile }: WaterProfileFormProps) {
   const isEdit = Boolean(profile);
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const [name, setName] = useState(profile?.name ?? "");
   const [description, setDescription] = useState(profile?.description ?? "");
@@ -91,7 +93,6 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
 
     const formData = new FormData();
     formData.set("name", name);
@@ -111,15 +112,17 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
         if (result?.error) {
           setError(result.error);
         } else {
-          setSuccess(true);
-          setTimeout(() => setSuccess(false), 3000);
+          toast.success("Water profile updated.");
+          router.push(result.redirectTo);
         }
       } else {
         const result = await createWaterProfile(formData);
         if (result?.error) {
           setError(result.error);
+        } else {
+          toast.success("Water profile created.");
+          router.push(result.redirectTo);
         }
-        // redirect on success happens server-side
       }
     });
   };
@@ -132,13 +135,6 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
           {error}
         </div>
       )}
-      {success && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Saved successfully.
-        </div>
-      )}
-
       {/* Basic Info */}
       <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">

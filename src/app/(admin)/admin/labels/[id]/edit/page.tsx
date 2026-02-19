@@ -26,15 +26,15 @@ export default async function EditLabelPage({
       <div className="mb-6">
         <Link
           href="/admin/labels"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-teal-700 transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-teal-700 dark:hover:text-teal-400 transition-colors mb-4"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Labels
         </Link>
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Edit Label</h1>
-            <p className="mt-1 text-slate-500">{label.name}</p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Edit Label</h1>
+            <p className="mt-1 text-slate-500 dark:text-slate-400">{label.name}</p>
           </div>
           <LabelDeleteButton labelId={label.id} labelName={label.name} />
         </div>

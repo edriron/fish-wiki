@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Plus,
   Trash2,
@@ -40,8 +41,8 @@ function VariantRow({
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState(variant.name);
   const [description, setDescription] = useState(variant.description ?? "");
-  const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const variantImages = images.filter((img) => img.variant_id === variant.id);
 
@@ -50,9 +51,14 @@ function VariantRow({
     formData.set("name", name);
     formData.set("description", description);
     startTransition(async () => {
-      await updateVariant(variant.id, fishId, formData);
-      setEditing(false);
-      router.refresh();
+      const result = await updateVariant(variant.id, fishId, formData);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Variant updated.");
+        setEditing(false);
+        router.refresh();
+      }
     });
   };
 
@@ -60,6 +66,7 @@ function VariantRow({
     if (!confirm(`Delete variant "${variant.name}" and all its images?`)) return;
     startTransition(async () => {
       await deleteVariant(variant.id, fishId);
+      toast.success("Variant deleted.");
       router.refresh();
     });
   };
@@ -77,16 +84,21 @@ function VariantRow({
     formData.set("variant_id", variant.id);
     formData.set("is_primary", "false");
 
-    await uploadImage(formData);
+    const result = await uploadImage(formData);
     setUploading(false);
-    router.refresh();
+    if (result?.error) {
+      toast.error(result.error);
+    } else {
+      toast.success("Image uploaded.");
+      router.refresh();
+    }
     e.target.value = "";
   };
 
   return (
-    <div className="rounded-lg border border-slate-200 overflow-hidden">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50">
+      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 dark:bg-slate-800/50">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
@@ -106,7 +118,7 @@ function VariantRow({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Variant name"
-              className="h-8 flex-1 rounded border border-slate-200 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="h-8 flex-1 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
               autoFocus
             />
             <button
@@ -124,17 +136,17 @@ function VariantRow({
                 setEditing(false);
                 setName(variant.name);
               }}
-              className="flex items-center gap-1 rounded border border-slate-200 px-2.5 py-1 text-xs text-slate-600"
+              className="flex items-center gap-1 rounded border border-slate-200 dark:border-slate-600 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-400"
             >
               <X className="h-3 w-3" />
             </button>
           </div>
         ) : (
           <div className="flex flex-1 items-center gap-2">
-            <span className="text-sm font-medium text-slate-800">
+            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
               {variant.name}
             </span>
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-slate-400 dark:text-slate-500">
               {variantImages.length} image{variantImages.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -145,7 +157,7 @@ function VariantRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+              className="rounded p-1 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
             >
               <Pencil className="h-3.5 w-3.5" />
             </button>
@@ -173,11 +185,11 @@ function VariantRow({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Variant description (optional)"
               rows={2}
-              className="w-full rounded border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="w-full rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
           )}
           {!editing && variant.description && (
-            <p className="text-sm text-slate-500">{variant.description}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{variant.description}</p>
           )}
 
           {/* Images grid */}
@@ -186,7 +198,7 @@ function VariantRow({
               {variantImages.map((img) => (
                 <div
                   key={img.id}
-                  className="relative rounded-md border border-slate-200 overflow-hidden aspect-4/3"
+                  className="relative rounded-md border border-slate-200 dark:border-slate-600 overflow-hidden aspect-4/3"
                 >
                   <Image
                     src={img.image_url}
@@ -207,7 +219,10 @@ function VariantRow({
 
           {/* Upload */}
           <div className="flex items-center gap-2">
-            <label
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
               className={cn(
                 "inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors",
                 uploading && "opacity-50 cursor-not-allowed"
@@ -224,14 +239,15 @@ function VariantRow({
                   Add Image
                 </>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                disabled={uploading}
-                onChange={handleUploadVariantImage}
-              />
-            </label>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploading}
+              onChange={handleUploadVariantImage}
+            />
           </div>
         </div>
       )}
@@ -268,7 +284,9 @@ function AddVariantForm({
       const result = await createVariant(formData);
       if (result?.error) {
         setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Variant added.");
         router.refresh();
         onDone();
       }
@@ -276,12 +294,12 @@ function AddVariantForm({
   };
 
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 space-y-3">
-      <h4 className="text-sm font-semibold text-slate-700">Add Variant</h4>
+    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-3">
+      <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Add Variant</h4>
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Variant name <span className="text-red-500">*</span>
           </label>
           <input
@@ -290,11 +308,11 @@ function AddVariantForm({
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Black Acei, Albino"
             autoFocus
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="h-9 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Description
           </label>
           <input
@@ -302,7 +320,7 @@ function AddVariantForm({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Brief description (optional)"
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="h-9 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
       </div>
@@ -323,7 +341,7 @@ function AddVariantForm({
         <button
           type="button"
           onClick={onDone}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="rounded-lg border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           Cancel
         </button>
@@ -338,7 +356,7 @@ export function VariantManager({ fishId, variants, images }: VariantManagerProps
   return (
     <div className="space-y-3">
       {variants.length === 0 && !showAdd && (
-        <p className="text-sm text-slate-400 italic">
+        <p className="text-sm text-slate-400 dark:text-slate-500 italic">
           No variants yet. Add color or pattern variants of this species.
         </p>
       )}
@@ -362,7 +380,7 @@ export function VariantManager({ fishId, variants, images }: VariantManagerProps
         <button
           type="button"
           onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Variant

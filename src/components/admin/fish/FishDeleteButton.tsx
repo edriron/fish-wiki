@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { deleteFish } from "@/app/actions/fish";
 
 interface FishDeleteButtonProps {
@@ -22,10 +23,9 @@ export function FishDeleteButton({
   const handleDelete = () => {
     if (!confirm(`Delete "${fishName}"? This cannot be undone.`)) return;
     startTransition(async () => {
-      await deleteFish(fishId);
-      if (!redirectAfter) {
-        router.refresh();
-      }
+      const result = await deleteFish(fishId);
+      toast.success(`"${fishName}" deleted.`);
+      router.push(result.redirectTo);
     });
   };
 

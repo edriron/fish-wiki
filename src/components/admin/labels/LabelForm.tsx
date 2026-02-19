@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Save, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Save, Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import { AiButton } from "@/components/admin/AiButton";
 import { createLabel, updateLabel } from "@/app/actions/labels";
 
@@ -33,9 +35,9 @@ const PRESET_COLORS = [
 
 export function LabelForm({ label }: LabelFormProps) {
   const isEdit = Boolean(label);
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   const [name, setName] = useState(label?.name ?? "");
   const [color, setColor] = useState(label?.color ?? "");
@@ -43,7 +45,6 @@ export function LabelForm({ label }: LabelFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
 
     const formData = new FormData();
     formData.set("name", name);
@@ -55,15 +56,17 @@ export function LabelForm({ label }: LabelFormProps) {
         if (result?.error) {
           setError(result.error);
         } else {
-          setSuccess(true);
-          setTimeout(() => setSuccess(false), 3000);
+          toast.success("Label updated.");
+          router.push(result.redirectTo);
         }
       } else {
         const result = await createLabel(formData);
         if (result?.error) {
           setError(result.error);
+        } else {
+          toast.success("Label created.");
+          router.push(result.redirectTo);
         }
-        // redirect on success happens server-side
       }
     });
   };
@@ -76,13 +79,6 @@ export function LabelForm({ label }: LabelFormProps) {
           {error}
         </div>
       )}
-      {success && (
-        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle className="h-4 w-4 shrink-0" />
-          Saved successfully.
-        </div>
-      )}
-
       <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
           <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">

@@ -40,7 +40,8 @@ export default async function AdminLabelsPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-110">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-left">
                 <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Label</th>
@@ -100,6 +101,7 @@ export default async function AdminLabelsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

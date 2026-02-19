@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Upload,
   Trash2,
@@ -54,6 +55,7 @@ function ImageCard({
     if (!confirm("Delete this image?")) return;
     startTransition(async () => {
       await deleteImage(image.id, fishId, image.image_url);
+      toast.success("Image deleted.");
       router.refresh();
     });
   };
@@ -61,6 +63,7 @@ function ImageCard({
   const handleSetPrimary = () => {
     startTransition(async () => {
       await setImagePrimary(image.id, fishId);
+      toast.success("Primary image set.");
       router.refresh();
     });
   };
@@ -68,6 +71,7 @@ function ImageCard({
   const handleSaveMeta = () => {
     startTransition(async () => {
       await updateImageMeta(image.id, fishId, caption, altText);
+      toast.success("Image updated.");
       setEditing(false);
       router.refresh();
     });
@@ -76,10 +80,10 @@ function ImageCard({
   return (
     <div
       className={cn(
-        "relative rounded-lg border overflow-hidden bg-slate-50",
+        "relative rounded-lg border overflow-hidden bg-slate-50 dark:bg-slate-700/50",
         image.is_primary
           ? "border-teal-400 ring-2 ring-teal-400/30"
-          : "border-slate-200"
+          : "border-slate-200 dark:border-slate-600"
       )}
     >
       {/* Image */}
@@ -113,14 +117,14 @@ function ImageCard({
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Caption (e.g. Male, Female)"
-              className="w-full rounded border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="w-full rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
             <input
               type="text"
               value={altText}
               onChange={(e) => setAltText(e.target.value)}
               placeholder="Alt text"
-              className="w-full rounded border border-slate-200 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
+              className="w-full rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
             />
             <div className="flex gap-1">
               <button
@@ -135,7 +139,7 @@ function ImageCard({
               <button
                 type="button"
                 onClick={() => setEditing(false)}
-                className="flex items-center gap-1 rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                className="flex items-center gap-1 rounded border border-slate-200 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 <X className="h-3 w-3" />
                 Cancel
@@ -145,10 +149,10 @@ function ImageCard({
         ) : (
           <>
             {image.caption && (
-              <p className="text-xs text-slate-600 truncate">{image.caption}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{image.caption}</p>
             )}
             {!image.caption && !image.alt_text && (
-              <p className="text-xs text-slate-400 italic">No caption</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic">No caption</p>
             )}
           </>
         )}
@@ -158,7 +162,7 @@ function ImageCard({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1 rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-1 rounded border border-slate-200 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             <Pencil className="h-3 w-3" />
             Edit
@@ -226,7 +230,9 @@ function UploadForm({
       const result = await uploadImage(formData);
       if (result.error) {
         setError(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Image uploaded.");
         router.refresh();
         onDone();
       }
@@ -234,8 +240,8 @@ function UploadForm({
   };
 
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 space-y-4">
-      <h3 className="text-sm font-semibold text-slate-700">Upload New Image</h3>
+    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-5 space-y-4">
+      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Upload New Image</h3>
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -246,7 +252,7 @@ function UploadForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* File picker */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Image file <span className="text-red-500">*</span>
           </label>
           <div className="flex items-center gap-2">
@@ -259,13 +265,13 @@ function UploadForm({
             />
           </div>
           {fileName && (
-            <p className="mt-1 text-xs text-slate-400">Selected: {fileName}</p>
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Selected: {fileName}</p>
           )}
         </div>
 
         {/* Caption */}
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Caption
           </label>
           <input
@@ -273,13 +279,13 @@ function UploadForm({
             value={state.caption}
             onChange={(e) => setState((s) => ({ ...s, caption: e.target.value }))}
             placeholder="e.g. Male, Female holding fry"
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="h-9 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
 
         {/* Alt text */}
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">
+          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
             Alt text
           </label>
           <input
@@ -287,14 +293,14 @@ function UploadForm({
             value={state.altText}
             onChange={(e) => setState((s) => ({ ...s, altText: e.target.value }))}
             placeholder="Describe the image"
-            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+            className="h-9 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
           />
         </div>
 
         {/* Variant */}
         {variants.length > 0 && (
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Variant (optional)
             </label>
             <select
@@ -302,7 +308,7 @@ function UploadForm({
               onChange={(e) =>
                 setState((s) => ({ ...s, variantId: e.target.value }))
               }
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
+              className="h-9 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 cursor-pointer"
             >
               <option value="">Base fish (no variant)</option>
               {variants.map((v) => (
@@ -355,7 +361,7 @@ function UploadForm({
         <button
           type="button"
           onClick={onDone}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="rounded-lg border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           Cancel
         </button>
@@ -375,9 +381,9 @@ export function ImageManager({ fishId, images, variants }: ImageManagerProps) {
       {/* Base images */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-700">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Base Images
-            <span className="ml-2 text-xs font-normal text-slate-400">
+            <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
               ({baseImages.length})
             </span>
           </h3>
@@ -404,9 +410,9 @@ export function ImageManager({ fishId, images, variants }: ImageManagerProps) {
         )}
 
         {baseImages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-10 text-center">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 py-10 text-center">
             <ImageIcon className="h-10 w-10 text-slate-300 mb-2" />
-            <p className="text-sm text-slate-400">No images yet</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">No images yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -427,7 +433,7 @@ export function ImageManager({ fishId, images, variants }: ImageManagerProps) {
         <div>
           <h3 className="text-sm font-semibold text-slate-700 mb-3">
             Variant Images
-            <span className="ml-2 text-xs font-normal text-slate-400">
+            <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
               ({variantImages.length})
             </span>
           </h3>

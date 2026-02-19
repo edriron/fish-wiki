@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { Toaster } from "sonner";
 
 export default async function AdminLayout({
   children,
@@ -34,11 +35,12 @@ export default async function AdminLayout({
     "Admin";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="bg-slate-50 dark:bg-slate-900 md:flex md:h-screen md:overflow-hidden">
       <AdminNav userName={displayName} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-5xl px-8 py-8">{children}</div>
+      <main className="flex-1 overflow-y-auto pt-14 md:pt-0">
+        <div className="mx-auto max-w-5xl px-4 sm:px-8 py-6 md:py-8">{children}</div>
       </main>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

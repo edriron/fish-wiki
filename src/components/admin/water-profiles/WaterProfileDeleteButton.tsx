@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { deleteWaterProfile } from "@/app/actions/water-profiles";
 
 interface WaterProfileDeleteButtonProps {
@@ -25,8 +26,9 @@ export function WaterProfileDeleteButton({
     )
       return;
     startTransition(async () => {
-      await deleteWaterProfile(profileId);
-      router.refresh();
+      const result = await deleteWaterProfile(profileId);
+      toast.success(`Water profile "${profileName}" deleted.`);
+      router.push(result.redirectTo);
     });
   };
 
