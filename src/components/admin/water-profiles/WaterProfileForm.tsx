@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AiButton } from "@/components/admin/AiButton";
-import { createWaterProfile, updateWaterProfile } from "@/app/actions/water-profiles";
+import {
+  createWaterProfile,
+  updateWaterProfile,
+} from "@/app/actions/water-profiles";
 import type { WaterProfile } from "@/types/fish";
 
 interface WaterProfileFormProps {
@@ -44,7 +47,9 @@ function RangeRow({
     <div>
       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
         {label}
-        <span className="ml-1 font-normal text-slate-400 dark:text-slate-500 text-xs">({unit})</span>
+        <span className="ml-1 font-normal text-slate-400 dark:text-slate-500 text-xs">
+          ({unit})
+        </span>
       </label>
       <div className="flex items-center gap-2">
         <input
@@ -57,7 +62,9 @@ function RangeRow({
           min={min}
           className={FIELD}
         />
-        <span className="text-slate-400 dark:text-slate-500 text-sm shrink-0">to</span>
+        <span className="text-slate-400 dark:text-slate-500 text-sm shrink-0">
+          to
+        </span>
         <input
           type="number"
           name={nameMax}
@@ -111,18 +118,34 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
         const result = await updateWaterProfile(profile.id, formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Water profile updated.");
-          router.push(result.redirectTo);
         }
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+
+        toast.success("Water profile updated.");
+        router.push(result.redirectTo);
+        // else {
+        //   toast.success("Water profile updated.");
+        //   router.push(result.redirectTo);
+        // }
       } else {
         const result = await createWaterProfile(formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Water profile created.");
-          router.push(result.redirectTo);
         }
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+
+        toast.success("Water profile created.");
+        router.push(result.redirectTo);
+        // else {
+        //   toast.success("Water profile created.");
+        //   router.push(result.redirectTo);
+        // }
       }
     });
   };

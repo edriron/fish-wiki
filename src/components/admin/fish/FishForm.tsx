@@ -23,8 +23,10 @@ interface FishFormProps {
   selectedLabelIds?: string[];
 }
 
-const FIELD = "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
-const TEXTAREA = "w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
+const FIELD =
+  "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+const TEXTAREA =
+  "w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
 const SELECT = cn(FIELD, "cursor-pointer");
 
 export function FishForm({
@@ -41,18 +43,25 @@ export function FishForm({
   // Controlled fields
   const [commonName, setCommonName] = useState(fish?.common_name ?? "");
   const [slug, setSlug] = useState(fish?.slug ?? "");
-  const [scientificName, setScientificName] = useState(fish?.scientific_name ?? "");
+  const [scientificName, setScientificName] = useState(
+    fish?.scientific_name ?? "",
+  );
   const [description, setDescription] = useState(fish?.description ?? "");
   const [originRegion, setOriginRegion] = useState(fish?.origin_region ?? "");
   const [waterType, setWaterType] = useState(fish?.water_type ?? "");
-  const [difficultyLevel, setDifficultyLevel] = useState(fish?.difficulty_level ?? "");
+  const [difficultyLevel, setDifficultyLevel] = useState(
+    fish?.difficulty_level ?? "",
+  );
   const [diet, setDiet] = useState(fish?.diet ?? "");
-  const [waterProfileId, setWaterProfileId] = useState(fish?.water_profile_id ?? "");
+  const [waterProfileId, setWaterProfileId] = useState(
+    fish?.water_profile_id ?? "",
+  );
   const [minTankLiters, setMinTankLiters] = useState(
-    fish?.min_tank_liters?.toString() ?? ""
+    fish?.min_tank_liters?.toString() ?? "",
   );
   const [published, setPublished] = useState(fish?.published ?? false);
-  const [selectedLabels, setSelectedLabels] = useState<string[]>(selectedLabelIds);
+  const [selectedLabels, setSelectedLabels] =
+    useState<string[]>(selectedLabelIds);
 
   const handleCommonNameChange = (value: string) => {
     setCommonName(value);
@@ -63,7 +72,7 @@ export function FishForm({
 
   const toggleLabel = (id: string) => {
     setSelectedLabels((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id],
     );
   };
 
@@ -90,18 +99,33 @@ export function FishForm({
         const result = await updateFish(fish.id, formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Fish updated.");
-          router.push(result.redirectTo);
+          return;
         }
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+        toast.success("Fish updated.");
+        router.push(result.redirectTo);
+        // else {
+        //   toast.success("Fish updated.");
+        //   router.push(result.redirectTo);
+        // }
       } else {
         const result = await createFish(formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Fish created.");
-          router.push(result.redirectTo);
         }
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+        toast.success("Fish created.");
+        router.push(result.redirectTo);
+        // else {
+        //   toast.success("Fish created.");
+        //   router.push(result.redirectTo);
+        // }
       }
     });
   };
@@ -341,14 +365,20 @@ export function FishForm({
                       "rounded-full border px-4 py-1.5 text-sm font-medium transition-all cursor-pointer",
                       selected
                         ? "bg-teal-600 border-teal-600 text-white shadow-sm"
-                        : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400"
+                        : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400",
                     )}
                     style={
                       selected && label.color
-                        ? { backgroundColor: label.color, borderColor: label.color }
+                        ? {
+                            backgroundColor: label.color,
+                            borderColor: label.color,
+                          }
                         : !selected && label.color
-                        ? { borderColor: `${label.color}60`, color: label.color }
-                        : undefined
+                          ? {
+                              borderColor: `${label.color}60`,
+                              color: label.color,
+                            }
+                          : undefined
                     }
                   >
                     {label.name}
@@ -370,7 +400,9 @@ export function FishForm({
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Published</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                Published
+              </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Make this species visible on the public wiki
               </p>
@@ -380,7 +412,7 @@ export function FishForm({
               onClick={() => setPublished(!published)}
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2",
-                published ? "bg-teal-600" : "bg-slate-200 dark:bg-slate-600"
+                published ? "bg-teal-600" : "bg-slate-200 dark:bg-slate-600",
               )}
               role="switch"
               aria-checked={published}
@@ -388,7 +420,7 @@ export function FishForm({
               <span
                 className={cn(
                   "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
-                  published ? "translate-x-6" : "translate-x-1"
+                  published ? "translate-x-6" : "translate-x-1",
                 )}
               />
             </button>

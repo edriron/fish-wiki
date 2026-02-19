@@ -55,18 +55,36 @@ export function LabelForm({ label }: LabelFormProps) {
         const result = await updateLabel(label.id, formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Label updated.");
-          router.push(result.redirectTo);
         }
+
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+
+        toast.success("Label updated.");
+        router.push(result.redirectTo);
+
+        // else {
+        //   toast.success("Label updated.");
+        //   router.push(result.redirectTo);
+        // }
       } else {
         const result = await createLabel(formData);
         if (result?.error) {
           setError(result.error);
-        } else {
-          toast.success("Label created.");
-          router.push(result.redirectTo);
         }
+        if (!result?.redirectTo) {
+          setError("Unexpected error: missing redirect.");
+          return;
+        }
+
+        toast.success("Label created.");
+        router.push(result.redirectTo);
+        // else {
+        //   toast.success("Label created.");
+        //   router.push(result.redirectTo);
+        // }
       }
     });
   };

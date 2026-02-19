@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation";
 import { Fish } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/public/ThemeToggle";
+import { Logo } from "../icons/Logo";
 
 export function PublicNav() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/wiki",    label: "Wiki",   showActive: false },
+    { href: "/wiki", label: "Wiki", showActive: true },
     { href: "/wiki?q=", label: "Search", showActive: false },
   ];
 
@@ -21,9 +22,10 @@ export function PublicNav() {
           href="/"
           className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 hover:text-teal-700 transition-colors dark:text-slate-100 dark:hover:text-teal-400"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white">
-            <Fish className="h-5 w-5" />
-          </div>
+          <Logo />
+          {/* <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white">
+            <Logo />
+          </div> */}
           Fish Wiki
         </Link>
 
@@ -34,9 +36,9 @@ export function PublicNav() {
               href={link.href}
               className={cn(
                 "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                link.showActive && pathname === link.href.split("?")[0]
+                pathname === link.href.split("?")[0]
                   ? "bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
               )}
             >
               {link.label}

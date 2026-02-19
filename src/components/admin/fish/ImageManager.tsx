@@ -431,7 +431,7 @@ export function ImageManager({ fishId, images, variants }: ImageManagerProps) {
       {/* Variant images */}
       {variantImages.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
             Variant Images
             <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
               ({variantImages.length})
@@ -443,7 +443,7 @@ export function ImageManager({ fishId, images, variants }: ImageManagerProps) {
               return (
                 <div key={img.id} className="space-y-1">
                   {variant && (
-                    <p className="text-xs font-medium text-slate-500">
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                       {variant.name}
                     </p>
                   )}
