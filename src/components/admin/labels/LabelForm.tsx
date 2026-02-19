@@ -16,7 +16,7 @@ interface LabelFormProps {
 }
 
 const FIELD =
-  "h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+  "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
 
 const PRESET_COLORS = [
   "#ef4444", // red
@@ -83,9 +83,9 @@ export function LabelForm({ label }: LabelFormProps) {
         </div>
       )}
 
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Label Details
           </h2>
         </div>
@@ -93,7 +93,7 @@ export function LabelForm({ label }: LabelFormProps) {
           {/* Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Name <span className="text-red-500">*</span>
               </label>
               <AiButton label="Auto-fill with AI" />
@@ -110,9 +110,9 @@ export function LabelForm({ label }: LabelFormProps) {
 
           {/* Color */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Color
-              <span className="ml-2 font-normal text-slate-400 text-xs">
+              <span className="ml-2 font-normal text-slate-400 dark:text-slate-500 text-xs">
                 (used as a tag accent color)
               </span>
             </label>
@@ -150,14 +150,14 @@ export function LabelForm({ label }: LabelFormProps) {
                 type="color"
                 value={color || "#6b7280"}
                 onChange={(e) => setColor(e.target.value)}
-                className="h-9 w-12 cursor-pointer rounded border border-slate-200 p-0.5"
+                className="h-9 w-12 cursor-pointer rounded border border-slate-200 dark:border-slate-600 p-0.5"
               />
               <input
                 type="text"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
                 placeholder="#rrggbb"
-                className="h-9 w-36 rounded-md border border-slate-200 bg-white px-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-teal-500"
+                className="h-9 w-36 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 text-sm font-mono text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-teal-500"
               />
               {color && (
                 <span
@@ -196,7 +196,7 @@ export function LabelForm({ label }: LabelFormProps) {
         </button>
         <a
           href="/admin/labels"
-          className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="rounded-lg border border-slate-200 dark:border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           Cancel
         </a>

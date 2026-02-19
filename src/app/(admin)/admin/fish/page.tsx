@@ -16,8 +16,8 @@ export default async function AdminFishPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Fish Species</h1>
-          <p className="mt-1 text-slate-500">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Fish Species</h1>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">
             {fish?.length ?? 0} species total
           </p>
         </div>
@@ -31,8 +31,8 @@ export default async function AdminFishPage() {
       </div>
 
       {!fish || fish.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-20 text-center">
-          <p className="text-slate-400 mb-3">No fish species yet.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 py-20 text-center">
+          <p className="text-slate-400 dark:text-slate-500 mb-3">No fish species yet.</p>
           <Link
             href="/admin/fish/new"
             className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
@@ -42,52 +42,52 @@ export default async function AdminFishPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                <th className="px-4 py-3 font-semibold text-slate-600">Common Name</th>
-                <th className="px-4 py-3 font-semibold text-slate-600 hidden sm:table-cell">
+              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-left">
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Common Name</th>
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 hidden sm:table-cell">
                   Scientific Name
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-600 hidden md:table-cell">
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 hidden md:table-cell">
                   Water Type
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-600 hidden lg:table-cell">
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 hidden lg:table-cell">
                   Difficulty
                 </th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Status</th>
-                <th className="px-4 py-3 font-semibold text-slate-600 text-right">
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Status</th>
+                <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
               {fish.map((f) => (
-                <tr key={f.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={f.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">{f.common_name}</div>
-                    <div className="text-xs text-slate-400 sm:hidden italic">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">{f.common_name}</div>
+                    <div className="text-xs text-slate-400 dark:text-slate-500 sm:hidden italic">
                       {f.scientific_name}
                     </div>
                   </td>
-                  <td className="px-4 py-3 hidden sm:table-cell text-slate-500 italic">
+                  <td className="px-4 py-3 hidden sm:table-cell text-slate-500 dark:text-slate-400 italic">
                     {f.scientific_name}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     {f.water_type ? (
-                      <span className="capitalize text-slate-600">{f.water_type}</span>
+                      <span className="capitalize text-slate-600 dark:text-slate-400">{f.water_type}</span>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-slate-300 dark:text-slate-600">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     {f.difficulty_level ? (
-                      <span className="capitalize text-slate-600">
+                      <span className="capitalize text-slate-600 dark:text-slate-400">
                         {f.difficulty_level}
                       </span>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-slate-300 dark:text-slate-600">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -97,7 +97,7 @@ export default async function AdminFishPage() {
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={`/admin/fish/${f.id}/edit`}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 dark:border-slate-600 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                         Edit

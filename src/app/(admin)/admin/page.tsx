@@ -68,10 +68,10 @@ export default async function AdminPage() {
               </Link>
             </div>
             <div>
-              <p className="text-3xl font-bold text-slate-900">{stat.count}</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{stat.count}</p>
               <Link
                 href={stat.href}
-                className="mt-1 text-sm text-slate-500 hover:text-teal-700 transition-colors"
+                className="mt-1 text-sm text-slate-500 dark:text-slate-400 hover:text-teal-700 dark:hover:text-teal-400 transition-colors"
               >
                 {stat.label} →
               </Link>
@@ -82,7 +82,7 @@ export default async function AdminPage() {
 
       {/* Quick links */}
       <div className="mt-10">
-        <h2 className="text-base font-semibold text-slate-700 mb-3">Quick Actions</h2>
+        <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-3">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/fish/new"
@@ -93,14 +93,14 @@ export default async function AdminPage() {
           </Link>
           <Link
             href="/admin/water-profiles/new"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Water Profile
           </Link>
           <Link
             href="/admin/labels/new"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Label

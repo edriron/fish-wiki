@@ -11,9 +11,9 @@ interface WaterProfileFormProps {
 }
 
 const FIELD =
-  "h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+  "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
 const TEXTAREA =
-  "w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
+  "w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
 
 function RangeRow({
   label,
@@ -40,9 +40,9 @@ function RangeRow({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
         {label}
-        <span className="ml-1 font-normal text-slate-400 text-xs">({unit})</span>
+        <span className="ml-1 font-normal text-slate-400 dark:text-slate-500 text-xs">({unit})</span>
       </label>
       <div className="flex items-center gap-2">
         <input
@@ -55,7 +55,7 @@ function RangeRow({
           min={min}
           className={FIELD}
         />
-        <span className="text-slate-400 text-sm shrink-0">to</span>
+        <span className="text-slate-400 dark:text-slate-500 text-sm shrink-0">to</span>
         <input
           type="number"
           name={nameMax}
@@ -140,9 +140,9 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
       )}
 
       {/* Basic Info */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Profile Details
           </h2>
         </div>
@@ -165,7 +165,7 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Description
             </label>
             <textarea
@@ -180,9 +180,9 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
       </section>
 
       {/* Water Parameters */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Water Parameters
           </h2>
         </div>
@@ -254,7 +254,7 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
         </button>
         <a
           href="/admin/water-profiles"
-          className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="rounded-lg border border-slate-200 dark:border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           Cancel
         </a>

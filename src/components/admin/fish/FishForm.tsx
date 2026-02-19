@@ -21,8 +21,8 @@ interface FishFormProps {
   selectedLabelIds?: string[];
 }
 
-const FIELD = "h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
-const TEXTAREA = "w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
+const FIELD = "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+const TEXTAREA = "w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
 const SELECT = cn(FIELD, "cursor-pointer");
 
 export function FishForm({
@@ -120,9 +120,9 @@ export function FishForm({
       )}
 
       {/* Section: Basic Information */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Basic Information
           </h2>
         </div>
@@ -130,7 +130,7 @@ export function FishForm({
           {/* Common Name */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-slate-700">
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Common Name <span className="text-red-500">*</span>
               </label>
               <AiButton label="Auto-fill with AI" />
@@ -147,9 +147,9 @@ export function FishForm({
 
           {/* Slug */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               URL Slug <span className="text-red-500">*</span>
-              <span className="ml-2 font-normal text-slate-400 text-xs">
+              <span className="ml-2 font-normal text-slate-400 dark:text-slate-500 text-xs">
                 (auto-generated, must be unique)
               </span>
             </label>
@@ -165,7 +165,7 @@ export function FishForm({
 
           {/* Scientific Name */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Scientific Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -180,7 +180,7 @@ export function FishForm({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Description
             </label>
             <textarea
@@ -194,7 +194,7 @@ export function FishForm({
 
           {/* Origin Region */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Origin Region
             </label>
             <input
@@ -209,16 +209,16 @@ export function FishForm({
       </section>
 
       {/* Section: Classification */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Classification
           </h2>
         </div>
         <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
           {/* Water Type */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Water Type
             </label>
             <select
@@ -235,7 +235,7 @@ export function FishForm({
 
           {/* Difficulty */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Care Difficulty
             </label>
             <select
@@ -252,7 +252,7 @@ export function FishForm({
 
           {/* Diet */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Diet
             </label>
             <select
@@ -271,16 +271,16 @@ export function FishForm({
       </section>
 
       {/* Section: Care Requirements */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Care Requirements
           </h2>
         </div>
         <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
           {/* Water Profile */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Water Profile
             </label>
             <select
@@ -310,7 +310,7 @@ export function FishForm({
 
           {/* Min Tank Size */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Minimum Tank Size (liters)
             </label>
             <input
@@ -327,7 +327,7 @@ export function FishForm({
 
       {/* Section: Labels */}
       {allLabels.length > 0 && (
-        <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
           <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
             <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
               Labels
@@ -346,7 +346,7 @@ export function FishForm({
                       "rounded-full border px-4 py-1.5 text-sm font-medium transition-all cursor-pointer",
                       selected
                         ? "bg-teal-600 border-teal-600 text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"
+                        : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400"
                     )}
                     style={
                       selected && label.color
@@ -366,17 +366,17 @@ export function FishForm({
       )}
 
       {/* Section: Status */}
-      <section className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-        <div className="bg-slate-50 border-b border-slate-200 px-6 py-3">
-          <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+      <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
+          <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
             Status
           </h2>
         </div>
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-900">Published</p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Published</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Make this species visible on the public wiki
               </p>
             </div>
@@ -385,7 +385,7 @@ export function FishForm({
               onClick={() => setPublished(!published)}
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2",
-                published ? "bg-teal-600" : "bg-slate-200"
+                published ? "bg-teal-600" : "bg-slate-200 dark:bg-slate-600"
               )}
               role="switch"
               aria-checked={published}
@@ -422,7 +422,7 @@ export function FishForm({
         </button>
         <a
           href="/admin/fish"
-          className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+          className="rounded-lg border border-slate-200 dark:border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           Cancel
         </a>
