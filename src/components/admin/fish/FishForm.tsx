@@ -9,6 +9,7 @@ import { toSlug } from "@/lib/slug";
 import { AiButton } from "@/components/admin/AiButton";
 import { createFish, updateFish } from "@/app/actions/fish";
 import type { FishSpecies, WaterProfile } from "@/types/fish";
+import { generateFishData } from "@/app/actions/ai";
 
 interface Label {
   id: string;
@@ -39,6 +40,7 @@ export function FishForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   // Controlled fields
   const [commonName, setCommonName] = useState(fish?.common_name ?? "");
@@ -130,6 +132,60 @@ export function FishForm({
     });
   };
 
+  const handleAiFill = async () => {
+    if (!commonName) {
+      toast.error("Enter a common name first.");
+      return;
+    }
+
+    setIsAiLoading(true);
+
+    try {
+      const result = await generateFishData(
+        commonName,
+        waterProfiles.map((wp) => ({
+          id: wp.id,
+          name: wp.name,
+        })),
+      );
+
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      const data = result.data;
+
+      setScientificName(data?.scientific_name ?? "");
+      setDescription(data?.description ?? "");
+      setOriginRegion(data?.origin_region ?? "");
+      setWaterType(data?.water_type ?? "");
+      setDifficultyLevel(data?.difficulty_level ?? "");
+      setDiet(data?.diet ?? "");
+      setMinTankLiters(
+        data?.min_tank_liters ? String(data.min_tank_liters) : "",
+      );
+
+      // Match water profile by name
+      if (data?.water_profile_name) {
+        const matchedProfile = waterProfiles.find(
+          (wp) =>
+            wp.name.toLowerCase() === data.water_profile_name?.toLowerCase(),
+        );
+
+        if (matchedProfile) {
+          setWaterProfileId(matchedProfile.id);
+        }
+      }
+
+      toast.success("AI filled fields.");
+    } catch (err) {
+      toast.error("AI generation failed.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Status messages */}
@@ -153,7 +209,12 @@ export function FishForm({
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Common Name <span className="text-red-500">*</span>
               </label>
-              <AiButton label="Auto-fill with AI" />
+              <AiButton
+                label="Auto-fill with AI"
+                onClick={handleAiFill}
+                loading={isAiLoading}
+                disabled={commonName === ""}
+              />
             </div>
             <input
               type="text"
