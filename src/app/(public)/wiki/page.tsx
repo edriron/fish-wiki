@@ -4,6 +4,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { FishCard } from "@/components/public/FishCard";
 import { SearchBar } from "@/components/public/SearchBar";
 import { LabelFilter } from "@/components/public/LabelFilter";
+import { RecentlyVisited } from "@/components/public/RecentlyVisited";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FishCardData, FishLabel } from "@/types/fish";
 
@@ -195,6 +196,9 @@ export default async function WikiPage({ searchParams }: WikiPageProps) {
       <Suspense fallback={<FishGridSkeleton />}>
         <FishGrid searchParams={searchParams} />
       </Suspense>
+
+      {/* Recently Visited */}
+      <RecentlyVisited />
     </div>
   );
 }

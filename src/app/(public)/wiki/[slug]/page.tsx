@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { WaterParametersCard } from "@/components/public/WaterParametersCard";
 import { VariantGallery } from "@/components/public/VariantGallery";
+import { TrackVisit } from "@/components/public/TrackVisit";
 import type { FishImage, FishLabel, FishVariant } from "@/types/fish";
 
 export const revalidate = 300;
@@ -192,6 +193,15 @@ export default async function FishPage({
 
   return (
     <div>
+      <TrackVisit
+        fish={{
+          slug: fish.slug,
+          common_name: fish.common_name,
+          scientific_name: fish.scientific_name,
+          primary_image: primaryImage?.image_url ?? null,
+          primary_image_alt: primaryImage?.alt_text ?? null,
+        }}
+      />
       {/* Hero Image */}
       <div className="relative h-[50vh] min-h-90 max-h-140 w-full bg-slate-900 overflow-hidden">
         {primaryImage ? (
