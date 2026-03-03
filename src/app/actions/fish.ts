@@ -54,7 +54,7 @@ export async function createFish(formData: FormData) {
 
   revalidatePath("/admin/fish");
   revalidatePath("/wiki");
-  return { success: true, redirectTo: "/admin/fish" };
+  return { success: true, redirectTo: "/admin/fish", fishId: fish.id };
 }
 
 export async function updateFish(id: string, formData: FormData) {

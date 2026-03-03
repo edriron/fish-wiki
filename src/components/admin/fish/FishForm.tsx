@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -41,6 +41,7 @@ export function FishForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const createAndEditRef = useRef(false);
 
   // Controlled fields
   const [commonName, setCommonName] = useState(fish?.common_name ?? "");
@@ -117,13 +118,19 @@ export function FishForm({
         const result = await createFish(formData);
         if (result?.error) {
           setError(result.error);
+          return;
         }
         if (!result?.redirectTo) {
           setError("Unexpected error: missing redirect.");
           return;
         }
         toast.success("Fish created.");
-        router.push(result.redirectTo);
+        const destination =
+          createAndEditRef.current && result.fishId
+            ? `/admin/fish/${result.fishId}/edit`
+            : result.redirectTo;
+        createAndEditRef.current = false;
+        router.push(destination);
         // else {
         //   toast.success("Fish created.");
         //   router.push(result.redirectTo);
@@ -496,7 +503,7 @@ export function FishForm({
           disabled={isPending}
           className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? (
+          {isPending && !createAndEditRef.current ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Saving…
@@ -508,6 +515,26 @@ export function FishForm({
             </>
           )}
         </button>
+        {!isEdit && (
+          <button
+            type="submit"
+            disabled={isPending}
+            onClick={() => { createAndEditRef.current = true; }}
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-700 dark:bg-slate-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 dark:hover:bg-slate-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending && createAndEditRef.current ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Create and Edit
+              </>
+            )}
+          </button>
+        )}
         <a
           href="/admin/fish"
           className="rounded-lg border border-slate-200 dark:border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
