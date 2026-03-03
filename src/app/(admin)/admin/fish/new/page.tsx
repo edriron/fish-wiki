@@ -8,7 +8,7 @@ export default async function NewFishPage() {
 
   const [{ data: waterProfiles }, { data: labels }] = await Promise.all([
     supabase.from("water_profiles").select("*").order("name"),
-    supabase.from("labels").select("id, name, color").order("name"),
+    supabase.from("labels").select("id, name, color, parent_id").order("name"),
   ]);
 
   return (

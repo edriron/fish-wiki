@@ -13,11 +13,17 @@ export default async function EditLabelPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: label } = await supabase
-    .from("labels")
-    .select("id, name, color")
-    .eq("id", id)
-    .single();
+  const [{ data: label }, { data: allLabels }] = await Promise.all([
+    supabase
+      .from("labels")
+      .select("id, name, color, parent_id")
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("labels")
+      .select("id, name, color, parent_id")
+      .order("name"),
+  ]);
 
   if (!label) notFound();
 
@@ -40,7 +46,7 @@ export default async function EditLabelPage({
         </div>
       </div>
 
-      <LabelForm label={label} />
+      <LabelForm label={label} allLabels={allLabels ?? []} />
     </div>
   );
 }

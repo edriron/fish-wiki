@@ -26,7 +26,7 @@ export default async function EditFishPage({
   ] = await Promise.all([
     supabase.from("fish_species").select("*").eq("id", id).single(),
     supabase.from("water_profiles").select("*").order("name"),
-    supabase.from("labels").select("id, name, color").order("name"),
+    supabase.from("labels").select("id, name, color, parent_id").order("name"),
     supabase.from("fish_labels").select("label_id").eq("fish_id", id),
     supabase
       .from("fish_images")

@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 import { LabelForm } from "@/components/admin/labels/LabelForm";
 
-export default function NewLabelPage() {
+export default async function NewLabelPage() {
+  const supabase = await createClient();
+  const { data: allLabels } = await supabase
+    .from("labels")
+    .select("id, name, color, parent_id")
+    .order("name");
+
   return (
     <div>
       <div className="mb-6">
@@ -17,7 +24,7 @@ export default function NewLabelPage() {
         <p className="mt-1 text-slate-500 dark:text-slate-400">Create a new tag label for fish species.</p>
       </div>
 
-      <LabelForm />
+      <LabelForm allLabels={allLabels ?? []} />
     </div>
   );
 }

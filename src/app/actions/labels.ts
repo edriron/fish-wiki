@@ -8,10 +8,11 @@ export async function createLabel(formData: FormData) {
 
   const name = formData.get("name") as string;
   const color = (formData.get("color") as string) || null;
+  const parent_id = (formData.get("parent_id") as string) || null;
 
   const { error } = await supabase
     .from("labels")
-    .insert({ name, color: color || null });
+    .insert({ name, color: color || null, parent_id });
 
   if (error) {
     return { error: error.message };
@@ -27,10 +28,11 @@ export async function updateLabel(id: string, formData: FormData) {
 
   const name = formData.get("name") as string;
   const color = (formData.get("color") as string) || null;
+  const parent_id = (formData.get("parent_id") as string) || null;
 
   const { error } = await supabase
     .from("labels")
-    .update({ name, color: color || null })
+    .update({ name, color: color || null, parent_id })
     .eq("id", id);
 
   if (error) {

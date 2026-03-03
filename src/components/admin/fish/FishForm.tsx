@@ -15,6 +15,7 @@ interface Label {
   id: string;
   name: string;
   color: string | null;
+  parent_id: string | null;
 }
 
 interface FishFormProps {
@@ -22,6 +23,31 @@ interface FishFormProps {
   waterProfiles: WaterProfile[];
   allLabels: Label[];
   selectedLabelIds?: string[];
+}
+
+function getAncestorIds(id: string, labels: Label[]): string[] {
+  const map = new Map(labels.map((l) => [l.id, l]));
+  const result: string[] = [];
+  let cur = map.get(id);
+  while (cur?.parent_id) {
+    result.push(cur.parent_id);
+    cur = map.get(cur.parent_id);
+  }
+  return result;
+}
+
+function buildLabelTree(labels: Label[]): { label: Label; depth: number }[] {
+  const result: { label: Label; depth: number }[] = [];
+  function walk(parentId: string | null, depth: number) {
+    for (const l of labels) {
+      if (l.parent_id === parentId) {
+        result.push({ label: l, depth });
+        walk(l.id, depth + 1);
+      }
+    }
+  }
+  walk(null, 0);
+  return result;
 }
 
 const FIELD =
@@ -74,9 +100,13 @@ export function FishForm({
   };
 
   const toggleLabel = (id: string) => {
-    setSelectedLabels((prev) =>
-      prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id],
-    );
+    setSelectedLabels((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((l) => l !== id);
+      }
+      const ancestors = getAncestorIds(id, allLabels);
+      return [...new Set([...prev, id, ...ancestors])];
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -150,10 +180,8 @@ export function FishForm({
     try {
       const result = await generateFishData(
         commonName,
-        waterProfiles.map((wp) => ({
-          id: wp.id,
-          name: wp.name,
-        })),
+        waterProfiles.map((wp) => ({ id: wp.id, name: wp.name })),
+        allLabels.map((l) => ({ id: l.id, name: l.name, parent_id: l.parent_id })),
       );
 
       if (result?.error) {
@@ -183,6 +211,16 @@ export function FishForm({
         if (matchedProfile) {
           setWaterProfileId(matchedProfile.id);
         }
+      }
+
+      // Apply AI-suggested labels with ancestor cascade
+      if (data?.label_ids?.length) {
+        const allSuggested = [
+          ...new Set(
+            data.label_ids.flatMap((id) => [id, ...getAncestorIds(id, allLabels)]),
+          ),
+        ];
+        setSelectedLabels(allSuggested);
       }
 
       toast.success("AI filled fields.");
@@ -420,40 +458,36 @@ export function FishForm({
               Labels
             </h2>
           </div>
-          <div className="px-6 py-5">
-            <div className="flex flex-wrap gap-2">
-              {allLabels.map((label) => {
-                const selected = selectedLabels.includes(label.id);
-                return (
+          <div className="px-6 py-5 space-y-1">
+            {buildLabelTree(allLabels).map(({ label, depth }) => {
+              const selected = selectedLabels.includes(label.id);
+              return (
+                <div key={label.id} style={{ paddingLeft: depth * 20 }} className="flex items-center gap-1.5">
+                  {depth > 0 && (
+                    <span className="text-slate-300 dark:text-slate-600 text-xs select-none shrink-0">└</span>
+                  )}
                   <button
-                    key={label.id}
                     type="button"
                     onClick={() => toggleLabel(label.id)}
                     className={cn(
-                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-all cursor-pointer",
+                      "rounded-full border px-3 py-1 text-sm font-medium transition-all cursor-pointer",
                       selected
                         ? "bg-teal-600 border-teal-600 text-white shadow-sm"
                         : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400",
                     )}
                     style={
                       selected && label.color
-                        ? {
-                            backgroundColor: label.color,
-                            borderColor: label.color,
-                          }
+                        ? { backgroundColor: label.color, borderColor: label.color }
                         : !selected && label.color
-                          ? {
-                              borderColor: `${label.color}60`,
-                              color: label.color,
-                            }
+                          ? { borderColor: `${label.color}60`, color: label.color }
                           : undefined
                     }
                   >
                     {label.name}
                   </button>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

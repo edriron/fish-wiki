@@ -2,6 +2,7 @@ export interface FishLabel {
   id: string;
   name: string;
   color: string | null;
+  parent_id: string | null;
 }
 
 export interface FishImage {

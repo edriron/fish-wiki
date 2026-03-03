@@ -8,6 +8,14 @@ import { RecentlyVisited } from "@/components/public/RecentlyVisited";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { FishCardData, FishLabel } from "@/types/fish";
 
+function getSubtreeIds(id: string, labels: FishLabel[]): string[] {
+  const result = [id];
+  for (const l of labels) {
+    if (l.parent_id === id) result.push(...getSubtreeIds(l.id, labels));
+  }
+  return result;
+}
+
 interface WikiPageProps {
   searchParams: Promise<{ q?: string; label?: string; water_type?: string }>;
 }
@@ -22,7 +30,7 @@ async function FishGrid({ searchParams }: WikiPageProps) {
       `
       id, slug, common_name, scientific_name, water_type, difficulty_level,
       fish_images(image_url, alt_text, is_primary),
-      fish_labels(labels(id, name, color))
+      fish_labels(labels(id, name, color, parent_id))
     `,
     )
     .eq("published", true)
@@ -38,7 +46,14 @@ async function FishGrid({ searchParams }: WikiPageProps) {
     query = query.ilike("water_type", water_type);
   }
 
-  const { data: fishData } = await query;
+  const [{ data: fishData }, { data: allLabelsData }] = await Promise.all([
+    query,
+    label
+      ? supabase.from("labels").select("id, name, color, parent_id")
+      : Promise.resolve({ data: [] as FishLabel[] }),
+  ]);
+
+  const allLabels = (allLabelsData ?? []) as FishLabel[];
 
   // Transform raw Supabase rows into FishCardData shape
   let fish: FishCardData[] = (fishData ?? []).map((f) => {
@@ -74,9 +89,10 @@ async function FishGrid({ searchParams }: WikiPageProps) {
     };
   });
 
-  // Filter by label client-side after fetch
+  // Filter by label — includes all descendants of the selected label
   if (label) {
-    fish = fish.filter((f) => f.labels.some((l) => l.id === label));
+    const subtreeIds = getSubtreeIds(label, allLabels);
+    fish = fish.filter((f) => f.labels.some((l) => subtreeIds.includes(l.id)));
   }
 
   if (fish.length === 0) {
@@ -151,7 +167,7 @@ async function LabelsSection() {
   const supabase = createPublicClient();
   const { data: labels } = await supabase
     .from("labels")
-    .select("id, name, color")
+    .select("id, name, color, parent_id")
     .order("name");
 
   if (!labels || labels.length === 0) return null;

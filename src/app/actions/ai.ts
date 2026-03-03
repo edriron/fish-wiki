@@ -13,11 +13,13 @@ interface FishData {
   diet: "Carnivore" | "Omnivore" | "Herbivore";
   min_tank_liters: number;
   water_profile_name: string | null;
+  label_ids: string[];
 }
 
 export async function generateFishData(
   commonName: string,
   waterProfiles: { id: string; name: string }[],
+  labels: { id: string; name: string; parent_id: string | null }[],
 ) {
   if (!commonName) {
     return { error: "Missing common name." };
@@ -32,6 +34,11 @@ export async function generateFishData(
 
   const profileNames = waterProfiles.map((p) => p.name);
 
+  const labelLines = labels.map((l) => {
+    const parent = labels.find((p) => p.id === l.parent_id);
+    return `- ${l.id}: ${l.name}${parent ? ` (under ${parent.name})` : ""}`;
+  });
+
   const prompt = `
 You are a fish expert.
 
@@ -40,6 +47,10 @@ ${profileNames.join(", ")}
 
 Choose the most suitable water profile from the list.
 If none match, return null.
+
+Available labels — choose the most specific leaf labels that apply to this fish.
+Ancestor labels will be auto-selected automatically, so only pick the deepest relevant ones:
+${labelLines.join("\n")}
 
 Return STRICT JSON:
 
@@ -51,7 +62,8 @@ Return STRICT JSON:
   "difficulty_level": "beginner | intermediate | expert",
   "diet": "Carnivore | Omnivore | Herbivore",
   "min_tank_liters": number,
-  "water_profile_name": "string | null"
+  "water_profile_name": "string | null",
+  "label_ids": ["uuid", ...]
 }
 
 Fish: ${commonName}

@@ -4,21 +4,24 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { AiButton } from "@/components/admin/AiButton";
 import { createLabel, updateLabel } from "@/app/actions/labels";
 
 interface Label {
   id: string;
   name: string;
   color: string | null;
+  parent_id: string | null;
 }
 
 interface LabelFormProps {
   label?: Label;
+  allLabels: Label[];
 }
 
 const FIELD =
   "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+const SELECT =
+  "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors cursor-pointer";
 
 const PRESET_COLORS = [
   "#ef4444", // red
@@ -33,7 +36,43 @@ const PRESET_COLORS = [
   "#0ea5e9", // sky
 ];
 
-export function LabelForm({ label }: LabelFormProps) {
+// Build a flat list in tree order with depth info for the parent selector
+function buildTreeOptions(
+  labels: Label[],
+  excludeId?: string,
+): { id: string; name: string; depth: number }[] {
+  // Collect all descendant IDs of excludeId to prevent circular parenting
+  const excluded = new Set<string>();
+  if (excludeId) {
+    excluded.add(excludeId);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const l of labels) {
+        if (l.parent_id && excluded.has(l.parent_id) && !excluded.has(l.id)) {
+          excluded.add(l.id);
+          changed = true;
+        }
+      }
+    }
+  }
+
+  const eligible = labels.filter((l) => !excluded.has(l.id));
+  const result: { id: string; name: string; depth: number }[] = [];
+
+  function walk(parentId: string | null, depth: number) {
+    for (const l of eligible) {
+      if (l.parent_id === parentId) {
+        result.push({ id: l.id, name: l.name, depth });
+        walk(l.id, depth + 1);
+      }
+    }
+  }
+  walk(null, 0);
+  return result;
+}
+
+export function LabelForm({ label, allLabels }: LabelFormProps) {
   const isEdit = Boolean(label);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -41,6 +80,9 @@ export function LabelForm({ label }: LabelFormProps) {
 
   const [name, setName] = useState(label?.name ?? "");
   const [color, setColor] = useState(label?.color ?? "");
+  const [parentId, setParentId] = useState(label?.parent_id ?? "");
+
+  const parentOptions = buildTreeOptions(allLabels, label?.id);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,42 +91,33 @@ export function LabelForm({ label }: LabelFormProps) {
     const formData = new FormData();
     formData.set("name", name);
     formData.set("color", color);
+    formData.set("parent_id", parentId);
 
     startTransition(async () => {
       if (isEdit && label) {
         const result = await updateLabel(label.id, formData);
         if (result?.error) {
           setError(result.error);
+          return;
         }
-
         if (!result?.redirectTo) {
           setError("Unexpected error: missing redirect.");
           return;
         }
-
         toast.success("Label updated.");
         router.push(result.redirectTo);
-
-        // else {
-        //   toast.success("Label updated.");
-        //   router.push(result.redirectTo);
-        // }
       } else {
         const result = await createLabel(formData);
         if (result?.error) {
           setError(result.error);
+          return;
         }
         if (!result?.redirectTo) {
           setError("Unexpected error: missing redirect.");
           return;
         }
-
         toast.success("Label created.");
         router.push(result.redirectTo);
-        // else {
-        //   toast.success("Label created.");
-        //   router.push(result.redirectTo);
-        // }
       }
     });
   };
@@ -106,12 +139,9 @@ export function LabelForm({ label }: LabelFormProps) {
         <div className="px-6 py-5 space-y-5">
           {/* Name */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Name <span className="text-red-500">*</span>
-              </label>
-              <AiButton label="Auto-fill with AI" />
-            </div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Name <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={name}
@@ -120,6 +150,30 @@ export function LabelForm({ label }: LabelFormProps) {
               placeholder="e.g. African Cichlid, Schooling Fish"
               className={FIELD}
             />
+          </div>
+
+          {/* Parent Label */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Parent Label
+              <span className="ml-2 font-normal text-slate-400 dark:text-slate-500 text-xs">
+                (optional — for hierarchy)
+              </span>
+            </label>
+            <select
+              value={parentId}
+              onChange={(e) => setParentId(e.target.value)}
+              className={SELECT}
+            >
+              <option value="">— None (root label) —</option>
+              {parentOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {"  ".repeat(opt.depth)}
+                  {opt.depth > 0 ? "└ " : ""}
+                  {opt.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Color */}
