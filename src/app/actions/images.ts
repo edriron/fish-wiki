@@ -108,6 +108,117 @@ export async function setImagePrimary(imageId: string, fishId: string) {
   return { success: true };
 }
 
+export async function uploadImageFromUrl(
+  imageUrl: string,
+  fishId: string,
+  caption: string | null,
+  altText: string | null,
+  variantId: string | null,
+  isPrimary: boolean,
+) {
+  const supabase = await createClient();
+
+  let blob: Blob;
+  let ext = "jpg";
+
+  try {
+    const response = await fetch(imageUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 FishWiki/1.0" },
+    });
+    if (!response.ok) {
+      return { error: `Failed to fetch image (${response.status})` };
+    }
+    const contentType = response.headers.get("content-type") ?? "image/jpeg";
+    if (contentType.includes("png")) ext = "png";
+    else if (contentType.includes("webp")) ext = "webp";
+    blob = await response.blob();
+  } catch {
+    return { error: "Could not fetch image from URL." };
+  }
+
+  const path = `${fishId}/${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("fish-images")
+    .upload(path, blob, { contentType: blob.type || "image/jpeg" });
+
+  if (uploadError) return { error: uploadError.message };
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("fish-images").getPublicUrl(path);
+
+  if (isPrimary && !variantId) {
+    await supabase
+      .from("fish_images")
+      .update({ is_primary: false })
+      .eq("fish_id", fishId)
+      .is("variant_id", null);
+  }
+
+  const { error: insertError } = await supabase.from("fish_images").insert({
+    fish_id: fishId,
+    image_url: publicUrl,
+    alt_text: altText || null,
+    caption: caption || null,
+    variant_id: variantId || null,
+    is_primary: isPrimary && !variantId,
+    order_index: 0,
+  });
+
+  if (insertError) return { error: insertError.message };
+
+  revalidatePath(`/admin/fish/${fishId}/edit`);
+  revalidatePath("/wiki");
+  return { success: true, url: publicUrl };
+}
+
+export async function replaceImageFile(formData: FormData) {
+  const supabase = await createClient();
+
+  const imageId = formData.get("image_id") as string;
+  const fishId = formData.get("fish_id") as string;
+  const oldUrl = formData.get("old_url") as string;
+  const file = formData.get("file") as File;
+
+  if (!imageId || !fishId || !file) return { error: "Missing required fields." };
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${fishId}/${Date.now()}_reframed.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("fish-images")
+    .upload(path, file, { contentType: file.type || "image/jpeg" });
+
+  if (uploadError) return { error: uploadError.message };
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("fish-images").getPublicUrl(path);
+
+  const { error: updateError } = await supabase
+    .from("fish_images")
+    .update({ image_url: publicUrl })
+    .eq("id", imageId);
+
+  if (updateError) return { error: updateError.message };
+
+  // Delete old file from storage
+  try {
+    const url = new URL(oldUrl);
+    const marker = "/object/public/fish-images/";
+    const idx = url.pathname.indexOf(marker);
+    if (idx !== -1) {
+      const storagePath = decodeURIComponent(url.pathname.slice(idx + marker.length));
+      await supabase.storage.from("fish-images").remove([storagePath]);
+    }
+  } catch { /* ignore */ }
+
+  revalidatePath(`/admin/fish/${fishId}/edit`);
+  revalidatePath("/wiki");
+  return { success: true, url: publicUrl };
+}
+
 export async function updateImageMeta(
   imageId: string,
   fishId: string,

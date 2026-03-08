@@ -86,6 +86,7 @@ export default async function EditFishPage({
         <div className="px-6 py-5">
           <ImageManager
             fishId={fish.id}
+            scientificName={fish.scientific_name ?? ""}
             images={(images ?? []) as FishImage[]}
             variants={(variants ?? []) as FishVariant[]}
           />
