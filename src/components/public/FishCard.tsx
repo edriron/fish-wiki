@@ -4,7 +4,10 @@ import { Fish } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { FishCardData } from "@/types/fish";
+import type { FishCardData, FishLabel } from "@/types/fish";
+import { LabelIcon } from "@/components/public/LabelIcon";
+
+const SHOW_LABEL_ICON = false;
 
 const waterTypeStyles: Record<string, string> = {
   freshwater:
@@ -24,11 +27,31 @@ const difficultyStyles: Record<string, string> = {
     "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900",
 };
 
-interface FishCardProps {
-  fish: FishCardData;
+function getLabelDepth(labelId: string, allLabels: FishLabel[]): number {
+  const label = allLabels.find((l) => l.id === labelId);
+  if (!label?.parent_id) return 0;
+  return 1 + getLabelDepth(label.parent_id, allLabels);
 }
 
-export function FishCard({ fish }: FishCardProps) {
+function getDeepestLabel(
+  fishLabels: FishLabel[],
+  allLabels: FishLabel[],
+): FishLabel | null {
+  if (!fishLabels.length || !allLabels.length) return null;
+  return fishLabels.reduce((best, current) =>
+    getLabelDepth(current.id, allLabels) > getLabelDepth(best.id, allLabels)
+      ? current
+      : best,
+  );
+}
+
+interface FishCardProps {
+  fish: FishCardData;
+  allLabels?: FishLabel[];
+}
+
+export function FishCard({ fish, allLabels = [] }: FishCardProps) {
+  const deepestLabel = getDeepestLabel(fish.labels, allLabels);
   const waterKey = fish.water_type?.toLowerCase() ?? "";
   const diffKey = fish.difficulty_level?.toLowerCase() ?? "";
 
@@ -55,12 +78,23 @@ export function FishCard({ fish }: FishCardProps) {
         </div>
 
         <CardContent className="p-4">
-          <h3 className="font-semibold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors dark:text-slate-100 dark:group-hover:text-teal-400">
-            {fish.common_name}
-          </h3>
-          <p className="mt-0.5 text-sm italic text-slate-500 truncate dark:text-slate-400">
-            {fish.scientific_name}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="font-semibold text-slate-900 leading-snug group-hover:text-teal-700 transition-colors dark:text-slate-100 dark:group-hover:text-teal-400">
+                {fish.common_name}
+              </h3>
+              <p className="mt-0.5 text-sm italic text-slate-500 truncate dark:text-slate-400">
+                {fish.scientific_name}
+              </p>
+            </div>
+            {SHOW_LABEL_ICON && deepestLabel && (
+              <LabelIcon
+                name={deepestLabel.name}
+                color={deepestLabel.color}
+                size={42}
+              />
+            )}
+          </div>
 
           {(fish.water_type || fish.difficulty_level) && (
             <div className="mt-3 flex flex-wrap gap-1.5">
