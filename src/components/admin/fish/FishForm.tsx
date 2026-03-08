@@ -88,6 +88,9 @@ export function FishForm({
   const [minTankLiters, setMinTankLiters] = useState(
     fish?.min_tank_liters?.toString() ?? "",
   );
+  const [maxSizeCm, setMaxSizeCm] = useState(
+    fish?.max_size_cm?.toString() ?? "",
+  );
   const [published, setPublished] = useState(fish?.published ?? false);
   const [selectedLabels, setSelectedLabels] =
     useState<string[]>(selectedLabelIds);
@@ -124,6 +127,7 @@ export function FishForm({
     formData.set("diet", diet);
     formData.set("water_profile_id", waterProfileId);
     formData.set("min_tank_liters", minTankLiters);
+    formData.set("max_size_cm", maxSizeCm);
     formData.set("published", published ? "true" : "false");
     selectedLabels.forEach((id) => formData.append("label_ids", id));
 
@@ -200,6 +204,7 @@ export function FishForm({
       setMinTankLiters(
         data?.min_tank_liters ? String(data.min_tank_liters) : "",
       );
+      setMaxSizeCm(data?.max_size_cm ? String(data.max_size_cm) : "");
 
       // Match water profile by name
       if (data?.water_profile_name) {
@@ -444,6 +449,22 @@ export function FishForm({
               onChange={(e) => setMinTankLiters(e.target.value)}
               min="0"
               placeholder="e.g. 150"
+              className={FIELD}
+            />
+          </div>
+
+          {/* Max Size */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Max Size (cm)
+            </label>
+            <input
+              type="number"
+              value={maxSizeCm}
+              onChange={(e) => setMaxSizeCm(e.target.value)}
+              min="0"
+              step="0.1"
+              placeholder="e.g. 12"
               className={FIELD}
             />
           </div>

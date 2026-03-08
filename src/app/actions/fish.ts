@@ -18,6 +18,8 @@ export async function createFish(formData: FormData) {
   const water_profile_id = (formData.get("water_profile_id") as string) || null;
   const min_tank_liters_raw = formData.get("min_tank_liters") as string;
   const min_tank_liters = min_tank_liters_raw ? Number(min_tank_liters_raw) : null;
+  const max_size_cm_raw = formData.get("max_size_cm") as string;
+  const max_size_cm = max_size_cm_raw ? Number(max_size_cm_raw) : null;
   const published = formData.get("published") === "true";
   const labelIds = formData.getAll("label_ids") as string[];
 
@@ -34,6 +36,7 @@ export async function createFish(formData: FormData) {
       diet: diet || null,
       water_profile_id: water_profile_id || null,
       min_tank_liters,
+      max_size_cm,
       published,
     })
     .select()
@@ -71,6 +74,8 @@ export async function updateFish(id: string, formData: FormData) {
   const water_profile_id = (formData.get("water_profile_id") as string) || null;
   const min_tank_liters_raw = formData.get("min_tank_liters") as string;
   const min_tank_liters = min_tank_liters_raw ? Number(min_tank_liters_raw) : null;
+  const max_size_cm_raw = formData.get("max_size_cm") as string;
+  const max_size_cm = max_size_cm_raw ? Number(max_size_cm_raw) : null;
   const published = formData.get("published") === "true";
   const labelIds = formData.getAll("label_ids") as string[];
 
@@ -87,6 +92,7 @@ export async function updateFish(id: string, formData: FormData) {
       diet: diet || null,
       water_profile_id: water_profile_id || null,
       min_tank_liters,
+      max_size_cm,
       published,
       updated_at: new Date().toISOString(),
     })

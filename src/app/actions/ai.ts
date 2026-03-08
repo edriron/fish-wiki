@@ -12,6 +12,7 @@ interface FishData {
   difficulty_level: "beginner" | "intermediate" | "expert";
   diet: "Carnivore" | "Omnivore" | "Herbivore";
   min_tank_liters: number;
+  max_size_cm: number | null;
   water_profile_name: string | null;
   label_ids: string[];
 }
@@ -62,6 +63,7 @@ Return STRICT JSON:
   "difficulty_level": "beginner | intermediate | expert",
   "diet": "Carnivore | Omnivore | Herbivore",
   "min_tank_liters": number,
+  "max_size_cm": number | null,
   "water_profile_name": "string | null",
   "label_ids": ["uuid", ...]
 }

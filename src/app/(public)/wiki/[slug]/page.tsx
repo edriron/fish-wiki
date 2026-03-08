@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { Fish, Droplets, MapPin, Gauge, Globe, ArrowLeft, Utensils } from "lucide-react";
+import { Fish, Droplets, MapPin, Gauge, Globe, ArrowLeft, Utensils, Ruler } from "lucide-react";
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { Badge } from "@/components/ui/badge";
@@ -461,6 +461,25 @@ export default async function FishPage({
                             </p>
                           )}
                         </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {fish.max_size_cm && (
+                  <>
+                    <Separator />
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700">
+                        <Ruler className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                          Max Size
+                        </p>
+                        <p className="mt-0.5 font-medium text-slate-800 dark:text-slate-200">
+                          {fish.max_size_cm} cm | {(fish.max_size_cm * 0.3937).toFixed(1)} in
+                        </p>
                       </div>
                     </div>
                   </>

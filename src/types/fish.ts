@@ -36,6 +36,7 @@ export interface FishSpecies {
   diet: string | null;
   water_profile_id: string | null;
   min_tank_liters: number | null;
+  max_size_cm: number | null;
   published: boolean;
   created_at: string;
   updated_at: string;
