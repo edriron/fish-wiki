@@ -18,6 +18,7 @@ import {
 import { WaterParametersCard } from "@/components/public/WaterParametersCard";
 import { VariantGallery } from "@/components/public/VariantGallery";
 import { TrackVisit } from "@/components/public/TrackVisit";
+import { DietTooltip } from "@/components/public/DietTooltip";
 import type { FishImage, FishLabel, FishVariant } from "@/types/fish";
 
 export const revalidate = 300;
@@ -154,7 +155,7 @@ export default async function FishPage({
       return Array.isArray(l) ? l : [l];
     }) ?? [];
 
-  // Fetch water profile (safe to fail — table may not exist in all envs)
+  // Fetch water profile
   let waterProfileName: string | null = null;
   let waterProfile: {
     temp_min: number | null; temp_max: number | null;
@@ -175,7 +176,7 @@ export default async function FishPage({
     }
   }
 
-  // Fetch variants (safe to fail — table may not exist in all envs)
+  // Fetch variants
   let variants: FishVariant[] = [];
   const { data: variantData } = await supabase
     .from("fish_variants")
@@ -183,6 +184,35 @@ export default async function FishPage({
     .eq("fish_id", fish.id)
     .order("order_index");
   if (variantData) variants = variantData;
+
+  // Similar fish: same genus + species prefix (e.g. "Cynotilapia afra")
+  const sciParts = fish.scientific_name.trim().split(/\s+/).slice(0, 2).join(" ");
+  let similarFish: Array<{
+    id: string; slug: string; common_name: string; scientific_name: string;
+    primary_image: string | null; primary_image_alt: string | null;
+  }> = [];
+  if (sciParts.split(" ").length >= 2) {
+    const { data: simRaw } = await supabase
+      .from("fish_species")
+      .select("id, slug, common_name, scientific_name, fish_images(image_url, alt_text, is_primary)")
+      .ilike("scientific_name", `${sciParts}%`)
+      .neq("id", fish.id)
+      .eq("published", true)
+      .limit(8);
+
+    similarFish = (simRaw ?? []).map((f) => {
+      const imgs = (f.fish_images as Array<{ image_url: string; alt_text: string | null; is_primary: boolean }>) ?? [];
+      const pri = imgs.find((i) => i.is_primary) ?? imgs[0] ?? null;
+      return {
+        id: f.id,
+        slug: f.slug,
+        common_name: f.common_name,
+        scientific_name: f.scientific_name,
+        primary_image: pri?.image_url ?? null,
+        primary_image_alt: pri?.alt_text ?? null,
+      };
+    });
+  }
 
   const waterKey = fish.water_type?.toLowerCase() ?? "";
   const diffKey = fish.difficulty_level?.toLowerCase() ?? "";
@@ -411,7 +441,7 @@ export default async function FishPage({
                         <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Diet
                         </p>
-                        <div className="mt-1">
+                        <div className="mt-1 flex items-center">
                           {dietCfg ? (
                             <Badge
                               variant="outline"
@@ -427,6 +457,7 @@ export default async function FishPage({
                               {fish.diet}
                             </p>
                           )}
+                          <DietTooltip diet={fish.diet} />
                         </div>
                       </div>
                     </div>
@@ -487,7 +518,7 @@ export default async function FishPage({
               </CardContent>
             </Card>
 
-            {/* Water Parameters Card — params sourced from the linked profile */}
+            {/* Water Parameters Card */}
             <WaterParametersCard
               temp_min={waterProfile?.temp_min}
               temp_max={waterProfile?.temp_max}
@@ -502,6 +533,53 @@ export default async function FishPage({
             />
           </div>
         </div>
+
+        {/* Similar Fish */}
+        {similarFish.length > 0 && (
+          <section className="mt-12 border-t border-slate-200 dark:border-slate-800 pt-10">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+              Similar Fish
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 -mt-2">
+              Other <span className="italic">{sciParts}</span> variants
+            </p>
+            <div className="flex gap-3 overflow-x-auto pt-1 pb-2 -mx-1 px-1">
+              {similarFish.map((f) => (
+                <Link
+                  key={f.id}
+                  href={`/wiki/${f.slug}`}
+                  className="group flex-none w-36 sm:w-44"
+                >
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:border-teal-200 dark:group-hover:border-teal-700">
+                    <div className="relative aspect-4/3 bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                      {f.primary_image ? (
+                        <Image
+                          src={f.primary_image}
+                          alt={f.primary_image_alt ?? f.common_name}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="176px"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <Fish className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2.5">
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors leading-snug">
+                        {f.common_name}
+                      </p>
+                      <p className="text-xs italic text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                        {f.scientific_name}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

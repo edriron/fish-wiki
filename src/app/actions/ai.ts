@@ -2,8 +2,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
 interface FishData {
   scientific_name: string;
   description: string;
@@ -17,6 +15,25 @@ interface FishData {
   label_ids: string[];
 }
 
+function getApiKeys(): string[] {
+  return [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+  ].filter(Boolean) as string[];
+}
+
+function isQuotaError(error: unknown): boolean {
+  const msg = String(error).toLowerCase();
+  return (
+    msg.includes("quota") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("429") ||
+    msg.includes("rate limit") ||
+    msg.includes("too many requests")
+  );
+}
+
 export async function generateFishData(
   commonName: string,
   waterProfiles: { id: string; name: string }[],
@@ -26,12 +43,10 @@ export async function generateFishData(
     return { error: "Missing common name." };
   }
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-    },
-  });
+  const keys = getApiKeys();
+  if (keys.length === 0) {
+    return { error: "No API keys configured." };
+  }
 
   const profileNames = waterProfiles.map((p) => p.name);
 
@@ -71,16 +86,40 @@ Return STRICT JSON:
 Fish: ${commonName}
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const fishData: FishData = JSON.parse(responseText);
+  const warnings: string[] = [];
 
-    return { data: fishData };
-  } catch (error) {
-    console.error("Gemini error:", error);
-    return { error: "AI generation failed." };
+  for (let i = 0; i < keys.length; i++) {
+    const genAI = new GoogleGenerativeAI(keys[i]);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    try {
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      const fishData: FishData = JSON.parse(responseText);
+      return { data: fishData, warnings };
+    } catch (error) {
+      if (isQuotaError(error)) {
+        warnings.push(`API key ${i + 1} quota exceeded.`);
+        if (i === keys.length - 1) {
+          return {
+            error: "All API tokens are exhausted. Please try again later or add more API keys.",
+            warnings,
+          };
+        }
+        // try next key
+        continue;
+      }
+      console.error("Gemini error:", error);
+      return { error: "AI generation failed.", warnings };
+    }
   }
+
+  return { error: "AI generation failed.", warnings };
 }
 
 // Searches iNaturalist taxa by name and returns observation + default photos.

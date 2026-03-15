@@ -173,6 +173,9 @@ export function FishForm({
     });
   };
 
+  const toTitleCase = (str: string) =>
+    str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
   const handleAiFill = async () => {
     if (!commonName) {
       toast.error("Enter a common name first.");
@@ -188,10 +191,22 @@ export function FishForm({
         allLabels.map((l) => ({ id: l.id, name: l.name, parent_id: l.parent_id })),
       );
 
+      // Show warnings for exhausted keys before success/error
+      if (result?.warnings?.length) {
+        for (const w of result.warnings) {
+          toast.warning(w);
+        }
+      }
+
       if (result?.error) {
         toast.error(result.error);
         return;
       }
+
+      // Capitalize common name (title case)
+      const titled = toTitleCase(commonName);
+      setCommonName(titled);
+      if (!isEdit) setSlug(toSlug(titled));
 
       const data = result.data;
 

@@ -2,13 +2,19 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { WikiFishList } from "@/components/public/WikiFishList";
 import { RecentlyVisited } from "@/components/public/RecentlyVisited";
 import type { FishCardData, FishLabel } from "@/types/fish";
+import type { PlantCardData } from "@/types/plant";
 
 interface WikiPageProps {
-  searchParams: Promise<{ q?: string; label?: string; water_type?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    label?: string;
+    water_type?: string;
+    tab?: string;
+  }>;
 }
 
 export default async function WikiPage({ searchParams }: WikiPageProps) {
-  const { q, label, water_type } = await searchParams;
+  const { q, label, water_type, tab } = await searchParams;
   const supabase = createPublicClient();
 
   const [{ data: fishRaw }, { data: labelsData }] = await Promise.all([
@@ -58,24 +64,52 @@ export default async function WikiPage({ searchParams }: WikiPageProps) {
 
   const labels = (labelsData ?? []) as FishLabel[];
 
+  // Fetch plants (safe fallback if table doesn't exist yet)
+  let plants: PlantCardData[] = [];
+  try {
+    const { data: plantsRaw } = await supabase
+      .from("plant_species")
+      .select("id, slug, common_name, scientific_name, type, water_type, difficulty, light_requirement, plant_images(image_url, is_primary)")
+      .eq("published", true)
+      .order("common_name");
+    plants = (plantsRaw ?? []).map((p) => {
+      const imgs = (p.plant_images as Array<{ image_url: string; is_primary: boolean }>) ?? [];
+      const primary = imgs.find((i) => i.is_primary) ?? imgs[0] ?? null;
+      return {
+        id: p.id,
+        slug: p.slug,
+        common_name: p.common_name,
+        scientific_name: p.scientific_name,
+        type: p.type,
+        water_type: p.water_type,
+        difficulty: p.difficulty,
+        light_requirement: p.light_requirement,
+        primary_image_url: primary?.image_url ?? null,
+      };
+    });
+  } catch {
+    // table doesn't exist yet
+  }
+
+  const initialTab = tab === "plants" ? "plants" : "fish";
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Fish Species</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Wiki</h1>
         <p className="mt-1 text-slate-500 dark:text-slate-400">
-          {water_type
-            ? `Showing ${water_type} fish`
-            : "Explore our comprehensive database of aquatic species"}
+          Explore our comprehensive database of aquatic species
         </p>
       </div>
 
       <WikiFishList
         fish={fish}
+        plants={plants}
         labels={labels}
         initialQ={q ?? ""}
         initialLabel={label ?? null}
         initialWaterType={water_type ?? null}
+        initialTab={initialTab}
       />
 
       <RecentlyVisited />

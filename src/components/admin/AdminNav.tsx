@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Fish,
+  Leaf,
   Tag,
   Droplets,
   LayoutDashboard,
@@ -25,13 +26,9 @@ interface AdminNavProps {
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/fish", label: "Fish Species", icon: Fish, exact: false },
+  { href: "/admin/plants", label: "Plants & Corals", icon: Leaf, exact: false },
   { href: "/admin/labels", label: "Labels", icon: Tag, exact: false },
-  {
-    href: "/admin/water-profiles",
-    label: "Water Profiles",
-    icon: Droplets,
-    exact: false,
-  },
+  { href: "/admin/water-profiles", label: "Water Profiles", icon: Droplets, exact: false },
 ];
 
 export function AdminNav({ userName }: AdminNavProps) {
