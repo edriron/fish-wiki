@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { toSlug } from "@/lib/slug";
+import { AiButton } from "@/components/admin/AiButton";
 import { createPlant, updatePlant } from "@/app/actions/plants";
+import { generatePlantData } from "@/app/actions/ai";
 import type { PlantSpecies } from "@/types/plant";
 
 interface PlantFormProps {
@@ -19,46 +21,80 @@ const TEXTAREA =
   "w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors resize-none";
 const SELECT = cn(FIELD, "cursor-pointer");
 
+const toTitleCase = (str: string) =>
+  str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
 export function PlantForm({ plant }: PlantFormProps) {
   const isEdit = Boolean(plant);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const createAndEditRef = useRef(false);
 
   const [commonName, setCommonName] = useState(plant?.common_name ?? "");
   const [slug, setSlug] = useState(plant?.slug ?? "");
-  const [scientificName, setScientificName] = useState(
-    plant?.scientific_name ?? "",
-  );
+  const [scientificName, setScientificName] = useState(plant?.scientific_name ?? "");
   const [type, setType] = useState<"plant" | "coral">(plant?.type ?? "plant");
   const [description, setDescription] = useState(plant?.description ?? "");
-  const [lightRequirement, setLightRequirement] = useState(
-    plant?.light_requirement ?? "",
-  );
-  const [co2Requirement, setCo2Requirement] = useState(
-    plant?.co2_requirement ?? "",
-  );
+  const [lightRequirement, setLightRequirement] = useState(plant?.light_requirement ?? "");
+  const [co2Requirement, setCo2Requirement] = useState(plant?.co2_requirement ?? "");
   const [difficulty, setDifficulty] = useState(plant?.difficulty ?? "");
   const [substrate, setSubstrate] = useState<string>(
-    plant?.substrate === true
-      ? "true"
-      : plant?.substrate === false
-        ? "false"
-        : "",
+    plant?.substrate === true ? "true" : plant?.substrate === false ? "false" : "",
   );
   const [growthRate, setGrowthRate] = useState(plant?.growth_rate ?? "");
   const [tempMin, setTempMin] = useState(plant?.temp_min?.toString() ?? "");
   const [tempMax, setTempMax] = useState(plant?.temp_max?.toString() ?? "");
   const [waterType, setWaterType] = useState(plant?.water_type ?? "");
   const [originRegion, setOriginRegion] = useState(plant?.origin_region ?? "");
-  const [primaryImageUrl, setPrimaryImageUrl] = useState(
-    plant?.primary_image_url ?? "",
-  );
   const [published, setPublished] = useState(plant?.published ?? false);
 
   const handleNameChange = (value: string) => {
     setCommonName(value);
     if (!isEdit) setSlug(toSlug(value));
+  };
+
+  const handleAiFill = async () => {
+    if (!commonName) {
+      toast.error("Enter a common name first.");
+      return;
+    }
+    setIsAiLoading(true);
+    try {
+      const result = await generatePlantData(commonName, type);
+
+      if (result?.warnings?.length) {
+        for (const w of result.warnings) toast.warning(w);
+      }
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      const titled = toTitleCase(commonName);
+      setCommonName(titled);
+      if (!isEdit) setSlug(toSlug(titled));
+
+      const d = result.data;
+      setScientificName(d?.scientific_name ?? "");
+      setDescription(d?.description ?? "");
+      setOriginRegion(d?.origin_region ?? "");
+      setWaterType(d?.water_type ?? "");
+      setLightRequirement(d?.light_requirement ?? "");
+      setCo2Requirement(d?.co2_requirement ?? "");
+      setDifficulty(d?.difficulty ?? "");
+      setGrowthRate(d?.growth_rate ?? "");
+      if (d?.substrate != null) setSubstrate(String(d.substrate));
+      setTempMin(d?.temp_min ? String(d.temp_min) : "");
+      setTempMax(d?.temp_max ? String(d.temp_max) : "");
+
+      toast.success("AI filled fields.");
+    } catch {
+      toast.error("AI generation failed.");
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,7 +116,6 @@ export function PlantForm({ plant }: PlantFormProps) {
     formData.set("temp_max", tempMax);
     formData.set("water_type", waterType);
     formData.set("origin_region", originRegion);
-    formData.set("primary_image_url", primaryImageUrl);
     formData.set("published", published ? "true" : "false");
 
     startTransition(async () => {
@@ -99,7 +134,12 @@ export function PlantForm({ plant }: PlantFormProps) {
           return;
         }
         toast.success("Created.");
-        router.push(result.redirectTo ?? "/admin/plants");
+        const destination =
+          createAndEditRef.current && result.plantId
+            ? `/admin/plants/${result.plantId}/edit`
+            : (result.redirectTo ?? "/admin/plants");
+        createAndEditRef.current = false;
+        router.push(destination);
       }
     });
   };
@@ -125,9 +165,17 @@ export function PlantForm({ plant }: PlantFormProps) {
         <div className="px-6 py-5 space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                Common Name <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Common Name <span className="text-red-500">*</span>
+                </label>
+                <AiButton
+                  label="Auto-fill with AI"
+                  onClick={handleAiFill}
+                  loading={isAiLoading}
+                  disabled={commonName === ""}
+                />
+              </div>
               <input
                 type="text"
                 value={commonName}
@@ -206,19 +254,6 @@ export function PlantForm({ plant }: PlantFormProps) {
               className={FIELD}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-              Primary Image URL
-            </label>
-            <input
-              type="url"
-              value={primaryImageUrl}
-              onChange={(e) => setPrimaryImageUrl(e.target.value)}
-              placeholder="https://..."
-              className={FIELD}
-            />
-          </div>
         </div>
       </section>
 
@@ -234,11 +269,7 @@ export function PlantForm({ plant }: PlantFormProps) {
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Water Type
             </label>
-            <select
-              value={waterType}
-              onChange={(e) => setWaterType(e.target.value)}
-              className={SELECT}
-            >
+            <select value={waterType} onChange={(e) => setWaterType(e.target.value)} className={SELECT}>
               <option value="">— Select —</option>
               <option value="freshwater">Freshwater</option>
               <option value="saltwater">Saltwater</option>
@@ -250,11 +281,7 @@ export function PlantForm({ plant }: PlantFormProps) {
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Difficulty
             </label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className={SELECT}
-            >
+            <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className={SELECT}>
               <option value="">— Select —</option>
               <option value="easy">Easy</option>
               <option value="intermediate">Intermediate</option>
@@ -266,11 +293,7 @@ export function PlantForm({ plant }: PlantFormProps) {
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Light Requirement
             </label>
-            <select
-              value={lightRequirement}
-              onChange={(e) => setLightRequirement(e.target.value)}
-              className={SELECT}
-            >
+            <select value={lightRequirement} onChange={(e) => setLightRequirement(e.target.value)} className={SELECT}>
               <option value="">— Select —</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -282,11 +305,7 @@ export function PlantForm({ plant }: PlantFormProps) {
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Growth Rate
             </label>
-            <select
-              value={growthRate}
-              onChange={(e) => setGrowthRate(e.target.value)}
-              className={SELECT}
-            >
+            <select value={growthRate} onChange={(e) => setGrowthRate(e.target.value)} className={SELECT}>
               <option value="">— Select —</option>
               <option value="slow">Slow</option>
               <option value="medium">Medium</option>
@@ -300,11 +319,7 @@ export function PlantForm({ plant }: PlantFormProps) {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                   CO₂ Requirement
                 </label>
-                <select
-                  value={co2Requirement}
-                  onChange={(e) => setCo2Requirement(e.target.value)}
-                  className={SELECT}
-                >
+                <select value={co2Requirement} onChange={(e) => setCo2Requirement(e.target.value)} className={SELECT}>
                   <option value="">— Select —</option>
                   <option value="none">None</option>
                   <option value="low">Low</option>
@@ -317,11 +332,7 @@ export function PlantForm({ plant }: PlantFormProps) {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
                   Substrate Required
                 </label>
-                <select
-                  value={substrate}
-                  onChange={(e) => setSubstrate(e.target.value)}
-                  className={SELECT}
-                >
+                <select value={substrate} onChange={(e) => setSubstrate(e.target.value)} className={SELECT}>
                   <option value="">— Select —</option>
                   <option value="true">Yes</option>
                   <option value="false">No (can float / attach)</option>
@@ -372,9 +383,7 @@ export function PlantForm({ plant }: PlantFormProps) {
         <div className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                Published
-              </p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Published</p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Make this species visible on the public wiki
               </p>
@@ -407,18 +416,26 @@ export function PlantForm({ plant }: PlantFormProps) {
           disabled={isPending}
           className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Saving…
-            </>
+          {isPending && !createAndEditRef.current ? (
+            <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
           ) : (
-            <>
-              <Save className="h-4 w-4" />
-              {isEdit ? "Save Changes" : "Create"}
-            </>
+            <><Save className="h-4 w-4" />{isEdit ? "Save Changes" : "Create"}</>
           )}
         </button>
+        {!isEdit && (
+          <button
+            type="submit"
+            disabled={isPending}
+            onClick={() => { createAndEditRef.current = true; }}
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-700 dark:bg-slate-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800 dark:hover:bg-slate-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending && createAndEditRef.current ? (
+              <><Loader2 className="h-4 w-4 animate-spin" />Saving…</>
+            ) : (
+              <><Save className="h-4 w-4" />Create and Edit</>
+            )}
+          </button>
+        )}
         <a
           href="/admin/plants"
           className="rounded-lg border border-slate-200 dark:border-slate-600 px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"

@@ -122,6 +122,75 @@ Fish: ${commonName}
   return { error: "AI generation failed.", warnings };
 }
 
+interface PlantData {
+  scientific_name: string;
+  description: string;
+  origin_region: string;
+  water_type: "freshwater" | "saltwater" | "brackish";
+  light_requirement: "low" | "medium" | "high" | null;
+  co2_requirement: "none" | "low" | "medium" | "high" | null;
+  difficulty: "easy" | "intermediate" | "expert";
+  growth_rate: "slow" | "medium" | "fast" | null;
+  substrate: boolean | null;
+  temp_min: number;
+  temp_max: number;
+}
+
+export async function generatePlantData(commonName: string, type: "plant" | "coral") {
+  if (!commonName) return { error: "Missing common name." };
+
+  const keys = getApiKeys();
+  if (keys.length === 0) return { error: "No API keys configured." };
+
+  const prompt = `
+You are an aquarium ${type} expert.
+
+Return STRICT JSON for the ${type} commonly known as "${commonName}":
+
+{
+  "scientific_name": "string",
+  "description": "string (2-3 sentences about care, appearance, and origin)",
+  "origin_region": "string",
+  "water_type": "freshwater | saltwater | brackish",
+  "light_requirement": "low | medium | high"${type === "coral" ? " | null" : ""},
+  "co2_requirement": ${type === "plant" ? '"none | low | medium | high"' : "null"},
+  "difficulty": "easy | intermediate | expert",
+  "growth_rate": "slow | medium | fast"${type === "coral" ? " | null" : ""},
+  "substrate": ${type === "plant" ? "true | false | null" : "null"},
+  "temp_min": number,
+  "temp_max": number
+}
+`;
+
+  const warnings: string[] = [];
+
+  for (let i = 0; i < keys.length; i++) {
+    const genAI = new GoogleGenerativeAI(keys[i]);
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" },
+    });
+
+    try {
+      const result = await model.generateContent(prompt);
+      const plantData: PlantData = JSON.parse(result.response.text());
+      return { data: plantData, warnings };
+    } catch (error) {
+      if (isQuotaError(error)) {
+        warnings.push(`API key ${i + 1} quota exceeded.`);
+        if (i === keys.length - 1) {
+          return { error: "All API tokens are exhausted. Please try again later.", warnings };
+        }
+        continue;
+      }
+      console.error("Gemini plant error:", error);
+      return { error: "AI generation failed.", warnings };
+    }
+  }
+
+  return { error: "AI generation failed.", warnings };
+}
+
 // Searches iNaturalist taxa by name and returns observation + default photos.
 export async function searchInaturalistImages(query: string) {
   if (!query.trim()) return { error: "Empty query." };

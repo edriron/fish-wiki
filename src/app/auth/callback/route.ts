@@ -30,5 +30,6 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(`${origin}/admin`);
+  const next = searchParams.get("next") ?? "/admin";
+  return NextResponse.redirect(`${origin}${next}`);
 }

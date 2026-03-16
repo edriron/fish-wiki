@@ -1,18 +1,174 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Fish } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  User as CircleUser,
+  LogOut,
+  Waves,
+  ChevronDown,
+  Sun,
+  Moon,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/public/ThemeToggle";
 import { Logo } from "../icons/Logo";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+
+function UserMenu() {
+  const [user, setUser] = useState<User | null>(null);
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const supabase = createClient();
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+
+  useEffect(() => {
+    setMounted(true);
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      },
+    );
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  };
+
+  const displayName =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ??
+    (user?.user_metadata?.name as string | undefined)?.split(" ")[0] ??
+    user?.email?.split("@")[0] ??
+    "there";
+
+  if (!user) {
+    return (
+      <div ref={menuRef} className="relative">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="h-9 w-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        >
+          <CircleUser className="h-5 w-5" />
+        </button>
+
+        {open && mounted && (
+          <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden z-50">
+            <div className="p-1">
+              <Link
+                href="/my-tanks/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <Waves className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                My Tanks
+              </Link>
+            </div>
+            <div className="p-1 border-t border-slate-100 dark:border-slate-700">
+              <button
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                {isDark ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
+                {isDark ? "Light mode" : "Dark mode"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 h-9 px-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      >
+        <CircleUser className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 text-slate-400 transition-transform duration-200",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg overflow-hidden z-50">
+          {/* Greeting */}
+          <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700">
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+              Hello, {displayName} 👋
+            </p>
+          </div>
+
+          {/* Links */}
+          <div className="p-1">
+            <Link
+              href="/my-tanks"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Waves className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              My Tanks
+            </Link>
+
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              {isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+              {isDark ? "Light mode" : "Dark mode"}
+            </button>
+          </div>
+
+          {/* Logout */}
+          <div className="p-1 border-t border-slate-100 dark:border-slate-700">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              Log out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function PublicNav() {
   const pathname = usePathname();
 
-  const links = [
-    { href: "/wiki", label: "Wiki", showActive: true },
-  ];
+  const links = [{ href: "/wiki", label: "Wiki", showActive: true }];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-slate-900 dark:border-slate-800">
@@ -22,9 +178,6 @@ export function PublicNav() {
           className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 hover:text-teal-700 transition-colors dark:text-slate-100 dark:hover:text-teal-400"
         >
           <Logo />
-          {/* <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white">
-            <Logo />
-          </div> */}
           Fish Wiki
         </Link>
 
@@ -43,7 +196,7 @@ export function PublicNav() {
               {link.label}
             </Link>
           ))}
-          <ThemeToggle />
+          <UserMenu />
         </div>
       </nav>
     </header>
