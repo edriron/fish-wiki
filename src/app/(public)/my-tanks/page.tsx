@@ -14,7 +14,7 @@ export default async function MyTanksPage() {
 
   const { data: tanks } = await supabase
     .from("tanks")
-    .select("id, name, description, volume_liters, created_at")
+    .select("id, name, description, volume_liters, tank_type, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 

@@ -20,6 +20,18 @@ interface Props {
   allLabels: TankLabel[];
 }
 
+function getVariantImage(
+  images: { image_url: string; is_primary: boolean; variant_id: string | null }[],
+  variantId: string | null,
+): string | null {
+  if (variantId) {
+    const variantImgs = images.filter((i) => i.variant_id === variantId);
+    if (variantImgs.length > 0)
+      return variantImgs.find((i) => i.is_primary)?.image_url ?? variantImgs[0].image_url;
+  }
+  return images.find((i) => i.is_primary)?.image_url ?? images[0]?.image_url ?? null;
+}
+
 function getRootLabel(labelId: string, labels: TankLabel[]): TankLabel | null {
   const map = new Map(labels.map((l) => [l.id, l]));
   let cur = map.get(labelId);
@@ -114,7 +126,10 @@ function TableView({
         <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50 bg-white dark:bg-slate-800/50">
           {fish.map((tf) => {
             const f = tf.fish_species;
-            const img = f.fish_images.find((i) => i.is_primary)?.image_url ?? null;
+            const img = getVariantImage(f.fish_images, tf.variant_id);
+            const variantName = tf.variant_id
+              ? (f.fish_variants.find((v) => v.id === tf.variant_id)?.name ?? "Variant")
+              : null;
             return (
               <tr key={tf.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                 <td className="px-4 py-3">
@@ -125,9 +140,14 @@ function TableView({
                 <td className="px-4 py-3">
                   <Link
                     href={`/wiki/${f.slug}`}
-                    className="font-medium text-slate-900 dark:text-slate-100 hover:text-teal-700 dark:hover:text-teal-400 transition-colors flex items-center gap-1 group"
+                    className="font-medium text-slate-900 dark:text-slate-100 hover:text-teal-700 dark:hover:text-teal-400 transition-colors flex items-center gap-1.5 group"
                   >
                     {f.common_name}
+                    {variantName && (
+                      <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 text-xs px-2 py-0.5 leading-none font-normal">
+                        {variantName}
+                      </span>
+                    )}
                     <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                   <p className="text-xs italic text-slate-400 dark:text-slate-500 mt-0.5">
@@ -249,7 +269,10 @@ function CategoryView({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {group.fish.map((tf) => {
               const f = tf.fish_species;
-              const img = f.fish_images.find((i) => i.is_primary)?.image_url ?? null;
+              const img = getVariantImage(f.fish_images, tf.variant_id);
+              const variantName = tf.variant_id
+                ? (f.fish_variants.find((v) => v.id === tf.variant_id)?.name ?? "Variant")
+                : null;
               return (
                 <Link
                   key={tf.id}
@@ -260,9 +283,16 @@ function CategoryView({
                     <FishImage src={img} alt={f.common_name} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                      {f.common_name}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-medium text-sm text-slate-900 dark:text-slate-100 truncate group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                        {f.common_name}
+                      </p>
+                      {variantName && (
+                        <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 text-xs px-2 py-0.5 leading-none font-normal shrink-0">
+                          {variantName}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs italic text-slate-400 truncate">{f.scientific_name}</p>
                   </div>
                   <div className="shrink-0 text-right">
@@ -378,7 +408,7 @@ export function TankView({ tankFish, tankPlants, allLabels }: Props) {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Search */}
-        <div className="relative flex-1 min-w-[180px]">
+        <div className="relative flex-1 min-w-45">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"

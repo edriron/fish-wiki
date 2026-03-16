@@ -7,6 +7,55 @@ import { Separator } from "@/components/ui/separator";
 import { Fish, X } from "lucide-react";
 import type { FishImage, FishVariant } from "@/types/fish";
 
+function GalleryImageItem({
+  img,
+  fishName,
+  onClick,
+}: {
+  img: FishImage;
+  fishName: string;
+  onClick: () => void;
+}) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="group">
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-xl"
+        aria-label={`Expand ${img.caption ?? img.alt_text ?? fishName}`}
+      >
+        <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800 cursor-pointer">
+          {/* Placeholder shown until image loads */}
+          {!loaded && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center animate-pulse">
+              <Fish className="h-8 w-8 text-slate-300 dark:text-slate-600" />
+              <span className="mt-1.5 text-xs text-slate-300 dark:text-slate-600">Loading…</span>
+            </div>
+          )}
+          <Image
+            src={img.image_url}
+            alt={img.alt_text ?? fishName}
+            fill
+            className={cn(
+              "object-cover transition-all duration-300 group-hover:scale-105",
+              loaded ? "opacity-100" : "opacity-0",
+            )}
+            sizes="(max-width: 640px) 50vw, 33vw"
+            onLoad={() => setLoaded(true)}
+          />
+          {img.caption && loaded && (
+            <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/60 to-transparent px-3 py-2">
+              <p className="text-xs font-medium text-white">{img.caption}</p>
+            </div>
+          )}
+        </div>
+      </button>
+    </div>
+  );
+}
+
 interface VariantGalleryProps {
   images: FishImage[];      // all non-hero images (primary excluded)
   variants: FishVariant[];
@@ -99,29 +148,12 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
         {visibleImages.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {visibleImages.map((img) => (
-              <div key={img.id} className="group">
-                <button
-                  type="button"
-                  onClick={() => setLightboxImg(img)}
-                  className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded-xl"
-                  aria-label={`Expand ${img.caption ?? img.alt_text ?? fishName}`}
-                >
-                  <div className="relative aspect-4/3 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-700 dark:bg-slate-800 cursor-pointer">
-                    <Image
-                      src={img.image_url}
-                      alt={img.alt_text ?? fishName}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 50vw, 33vw"
-                    />
-                    {img.caption && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/60 to-transparent px-3 py-2">
-                        <p className="text-xs font-medium text-white">{img.caption}</p>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              </div>
+              <GalleryImageItem
+                key={img.id}
+                img={img}
+                fishName={fishName}
+                onClick={() => setLightboxImg(img)}
+              />
             ))}
           </div>
         ) : (

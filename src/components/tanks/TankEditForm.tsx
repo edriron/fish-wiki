@@ -15,6 +15,8 @@ import {
   Loader2,
   AlertCircle,
   Trash2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -34,7 +36,10 @@ interface Props {
 }
 
 interface FishEntry {
+  key: string; // fishId + '|' + (variantId ?? '')
   fishId: string;
+  variantId: string | null;
+  variantName: string | null;
   quantity: number;
   male: number;
   female: number;
@@ -48,6 +53,18 @@ interface PlantEntry {
 
 const FIELD =
   "h-10 w-full rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors";
+
+function getVariantImage(
+  images: { image_url: string; is_primary: boolean; variant_id: string | null }[],
+  variantId: string | null,
+): string | null {
+  if (variantId) {
+    const variantImgs = images.filter((i) => i.variant_id === variantId);
+    if (variantImgs.length > 0)
+      return variantImgs.find((i) => i.is_primary)?.image_url ?? variantImgs[0].image_url;
+  }
+  return images.find((i) => i.is_primary)?.image_url ?? images[0]?.image_url ?? null;
+}
 
 function ThumbImage({ src, alt, isPlant }: { src: string | null; alt: string; isPlant?: boolean }) {
   const [err, setErr] = useState(false);
@@ -103,13 +120,12 @@ export function TankEditForm({
       .map((tf) => {
         const fish = (tf.fish_species as unknown as FishBasic) ?? fishMap.get(tf.fish_id);
         if (!fish) return null;
-        return {
-          fishId: tf.fish_id,
-          quantity: tf.quantity,
-          male: tf.quantity_male ?? 0,
-          female: tf.quantity_female ?? 0,
-          fish,
-        };
+        const variantId = tf.variant_id ?? null;
+        const variantName = variantId
+          ? (fish.fish_variants?.find((v) => v.id === variantId)?.name ?? null)
+          : null;
+        const key = tf.fish_id + "|" + (variantId ?? "");
+        return { key, fishId: tf.fish_id, variantId, variantName, quantity: tf.quantity, male: tf.quantity_male ?? 0, female: tf.quantity_female ?? 0, fish };
       })
       .filter(Boolean) as FishEntry[],
   );
@@ -123,23 +139,27 @@ export function TankEditForm({
       .filter(Boolean) as PlantEntry[],
   );
 
-  // Search
+  // Search & expand
   const [fishSearch, setFishSearch] = useState("");
   const [plantSearch, setPlantSearch] = useState("");
+  const [expandedFishId, setExpandedFishId] = useState<string | null>(null);
 
-  const addedFishIds = useMemo(() => new Set(fishEntries.map((e) => e.fishId)), [fishEntries]);
+  const addedCombos = useMemo(() => new Set(fishEntries.map((e) => e.key)), [fishEntries]);
   const addedPlantIds = useMemo(() => new Set(plantEntries.map((e) => e.plantId)), [plantEntries]);
 
   const filteredFish = useMemo(() => {
     const q = fishSearch.toLowerCase();
-    return allFish.filter(
-      (f) =>
-        !addedFishIds.has(f.id) &&
-        (!q ||
-          f.common_name.toLowerCase().includes(q) ||
-          f.scientific_name.toLowerCase().includes(q)),
-    );
-  }, [allFish, addedFishIds, fishSearch]);
+    return allFish.filter((f) => {
+      const matches =
+        !q ||
+        f.common_name.toLowerCase().includes(q) ||
+        f.scientific_name.toLowerCase().includes(q);
+      if (!matches) return false;
+      // Hide no-variant fish already added; always show fish with variants
+      if (f.fish_variants.length === 0) return !addedCombos.has(f.id + "|");
+      return true;
+    });
+  }, [allFish, addedCombos, fishSearch]);
 
   const filteredPlants = useMemo(() => {
     const q = plantSearch.toLowerCase();
@@ -152,31 +172,34 @@ export function TankEditForm({
     );
   }, [allPlants, addedPlantIds, plantSearch]);
 
-  const addFish = (f: FishBasic) =>
-    setFishEntries((prev) => [...prev, { fishId: f.id, quantity: 1, male: 0, female: 0, fish: f }]);
-  const removeFish = (id: string) => setFishEntries((prev) => prev.filter((e) => e.fishId !== id));
-  const changeFishQty = (id: string, delta: number) =>
+  const addFish = (f: FishBasic, variantId: string | null = null, variantName: string | null = null) => {
+    const key = f.id + "|" + (variantId ?? "");
+    if (addedCombos.has(key)) return;
+    setFishEntries((prev) => [...prev, { key, fishId: f.id, variantId, variantName, quantity: 1, male: 0, female: 0, fish: f }]);
+  };
+  const removeFish = (key: string) => setFishEntries((prev) => prev.filter((e) => e.key !== key));
+  const changeFishQty = (key: string, delta: number) =>
     setFishEntries((prev) =>
       prev.map((e) => {
-        if (e.fishId !== id) return e;
+        if (e.key !== key) return e;
         const qty = Math.max(1, e.quantity + delta);
         const male = Math.min(e.male, qty);
         const female = Math.min(e.female, qty - male);
         return { ...e, quantity: qty, male, female };
       }),
     );
-  const changeFishMale = (id: string, delta: number) =>
+  const changeFishMale = (key: string, delta: number) =>
     setFishEntries((prev) =>
       prev.map((e) =>
-        e.fishId === id
+        e.key === key
           ? { ...e, male: Math.max(0, Math.min(e.quantity - e.female, e.male + delta)) }
           : e,
       ),
     );
-  const changeFishFemale = (id: string, delta: number) =>
+  const changeFishFemale = (key: string, delta: number) =>
     setFishEntries((prev) =>
       prev.map((e) =>
-        e.fishId === id
+        e.key === key
           ? { ...e, female: Math.max(0, Math.min(e.quantity - e.male, e.female + delta)) }
           : e,
       ),
@@ -200,7 +223,6 @@ export function TankEditForm({
     }
     setError(null);
     startTransition(async () => {
-      // Save metadata
       const fd = new FormData();
       fd.set("name", name);
       fd.set("description", description);
@@ -212,10 +234,9 @@ export function TankEditForm({
         return;
       }
 
-      // Save contents
       const contentsResult = await saveTankContents(
         tankId,
-        fishEntries.map((e) => ({ fishId: e.fishId, quantity: e.quantity, male: e.male, female: e.female })),
+        fishEntries.map((e) => ({ fishId: e.fishId, quantity: e.quantity, male: e.male, female: e.female, variantId: e.variantId })),
         plantEntries.map((e) => ({ plantId: e.plantId, quantity: e.quantity })),
       );
       if (contentsResult?.error) {
@@ -351,14 +372,12 @@ export function TankEditForm({
                   </p>
                   <div className="max-h-64 overflow-y-auto space-y-2 pr-0.5">
                   {fishEntries.map((entry) => {
-                    const img =
-                      entry.fish.fish_images.find((i) => i.is_primary)?.image_url ??
-                      entry.fish.fish_images[0]?.image_url ?? null;
+                    const img = getVariantImage(entry.fish.fish_images, entry.variantId);
                     const unknown = entry.quantity - entry.male - entry.female;
                     const btnSm = "h-5 w-5 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs leading-none";
                     return (
                       <div
-                        key={entry.fishId}
+                        key={entry.key}
                         className="rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 p-2.5"
                       >
                         {/* Main row */}
@@ -367,26 +386,33 @@ export function TankEditForm({
                             <ThumbImage src={img} alt={entry.fish.common_name} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                              {entry.fish.common_name}
-                            </p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                                {entry.fish.common_name}
+                              </p>
+                              {entry.variantName && (
+                                <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 text-xs px-2 py-0.5 leading-none font-normal shrink-0">
+                                  {entry.variantName}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs italic text-slate-400 truncate">
                               {entry.fish.scientific_name}
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <button type="button" onClick={() => changeFishQty(entry.fishId, -1)}
+                            <button type="button" onClick={() => changeFishQty(entry.key, -1)}
                               className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
                               <Minus className="h-3.5 w-3.5" />
                             </button>
                             <span className="w-8 text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
                               {entry.quantity}
                             </span>
-                            <button type="button" onClick={() => changeFishQty(entry.fishId, 1)}
+                            <button type="button" onClick={() => changeFishQty(entry.key, 1)}
                               className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
                               <Plus className="h-3.5 w-3.5" />
                             </button>
-                            <button type="button" onClick={() => removeFish(entry.fishId)}
+                            <button type="button" onClick={() => removeFish(entry.key)}
                               className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-1">
                               <X className="h-3.5 w-3.5" />
                             </button>
@@ -395,13 +421,13 @@ export function TankEditForm({
                         {/* Gender strip */}
                         <div className="flex items-center gap-2 mt-2 pl-[52px]">
                           <span className="text-xs text-blue-500">♂</span>
-                          <button type="button" onClick={() => changeFishMale(entry.fishId, -1)} className={btnSm}>−</button>
+                          <button type="button" onClick={() => changeFishMale(entry.key, -1)} className={btnSm}>−</button>
                           <span className="w-4 text-center text-xs font-medium text-slate-700 dark:text-slate-300">{entry.male}</span>
-                          <button type="button" onClick={() => changeFishMale(entry.fishId, 1)} className={btnSm}>+</button>
+                          <button type="button" onClick={() => changeFishMale(entry.key, 1)} className={btnSm}>+</button>
                           <span className="text-xs text-pink-500 ml-2">♀</span>
-                          <button type="button" onClick={() => changeFishFemale(entry.fishId, -1)} className={btnSm}>−</button>
+                          <button type="button" onClick={() => changeFishFemale(entry.key, -1)} className={btnSm}>−</button>
                           <span className="w-4 text-center text-xs font-medium text-slate-700 dark:text-slate-300">{entry.female}</span>
-                          <button type="button" onClick={() => changeFishFemale(entry.fishId, 1)} className={btnSm}>+</button>
+                          <button type="button" onClick={() => changeFishFemale(entry.key, 1)} className={btnSm}>+</button>
                           <span className="text-xs text-slate-400 ml-2">? <span className="font-medium text-slate-500 dark:text-slate-400">{unknown}</span></span>
                         </div>
                       </div>
@@ -426,37 +452,106 @@ export function TankEditForm({
                     className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors"
                   />
                 </div>
-                <div className="max-h-52 overflow-y-auto space-y-1 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 p-1">
+                <div className="max-h-52 overflow-y-auto rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 p-1">
                   {filteredFish.length === 0 ? (
                     <p className="text-center py-4 text-sm text-slate-400">
                       {fishSearch ? "No matches." : "All fish added."}
                     </p>
                   ) : (
-                    filteredFish.slice(0, 50).map((f) => {
+                    <div className="space-y-0.5">
+                    {filteredFish.slice(0, 50).map((f) => {
                       const img = f.fish_images.find((i) => i.is_primary)?.image_url ??
                         f.fish_images[0]?.image_url ?? null;
+                      const hasVariants = f.fish_variants.length > 0;
+                      const isExpanded = expandedFishId === f.id;
+
                       return (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => addFish(f)}
-                          className="w-full flex items-center gap-3 rounded-md px-2.5 py-2 hover:bg-white dark:hover:bg-slate-700 transition-colors text-left group"
-                        >
-                          <div className="relative h-8 w-8 rounded-md overflow-hidden shrink-0">
-                            <ThumbImage src={img} alt={f.common_name} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
-                              {f.common_name}
-                            </p>
-                            <p className="text-xs italic text-slate-400 truncate">
-                              {f.scientific_name}
-                            </p>
-                          </div>
-                          <Plus className="h-4 w-4 text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                        </button>
+                        <div key={f.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (hasVariants) {
+                                setExpandedFishId(isExpanded ? null : f.id);
+                              } else {
+                                addFish(f);
+                              }
+                            }}
+                            className="w-full flex items-center gap-3 rounded-md px-2.5 py-2 hover:bg-white dark:hover:bg-slate-700 transition-colors text-left group"
+                          >
+                            <div className="relative h-8 w-8 rounded-md overflow-hidden shrink-0">
+                              <ThumbImage src={img} alt={f.common_name} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                                {f.common_name}
+                              </p>
+                              <p className="text-xs italic text-slate-400 truncate">
+                                {f.scientific_name}
+                              </p>
+                            </div>
+                            {hasVariants ? (
+                              <div className="shrink-0 flex items-center gap-1 text-xs text-slate-400">
+                                <span>{f.fish_variants.length} variants</span>
+                                {isExpanded
+                                  ? <ChevronUp className="h-4 w-4" />
+                                  : <ChevronDown className="h-4 w-4" />}
+                              </div>
+                            ) : (
+                              <Plus className="h-4 w-4 text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                            )}
+                          </button>
+
+                          {/* Variant picker */}
+                          {hasVariants && isExpanded && (
+                            <div className="ml-10 mr-1 mb-1 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 overflow-hidden">
+                              {/* Standard (no variant) */}
+                              <button
+                                type="button"
+                                disabled={addedCombos.has(f.id + "|")}
+                                onClick={() => addFish(f, null, null)}
+                                className={cn(
+                                  "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors border-b border-slate-100 dark:border-slate-700",
+                                  addedCombos.has(f.id + "|")
+                                    ? "text-slate-300 dark:text-slate-600 cursor-default"
+                                    : "hover:bg-teal-50 dark:hover:bg-teal-900/20 text-slate-700 dark:text-slate-300",
+                                )}
+                              >
+                                <span>Standard</span>
+                                {addedCombos.has(f.id + "|") ? (
+                                  <span className="text-xs text-slate-400">In tank</span>
+                                ) : (
+                                  <Plus className="h-3.5 w-3.5 text-teal-600" />
+                                )}
+                              </button>
+                              {/* Each variant */}
+                              {f.fish_variants.map((v, vi) => (
+                                <button
+                                  key={v.id}
+                                  type="button"
+                                  disabled={addedCombos.has(f.id + "|" + v.id)}
+                                  onClick={() => addFish(f, v.id, v.name)}
+                                  className={cn(
+                                    "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors",
+                                    vi < f.fish_variants.length - 1 && "border-b border-slate-100 dark:border-slate-700",
+                                    addedCombos.has(f.id + "|" + v.id)
+                                      ? "text-slate-300 dark:text-slate-600 cursor-default"
+                                      : "hover:bg-teal-50 dark:hover:bg-teal-900/20 text-slate-700 dark:text-slate-300",
+                                  )}
+                                >
+                                  <span>{v.name}</span>
+                                  {addedCombos.has(f.id + "|" + v.id) ? (
+                                    <span className="text-xs text-slate-400">In tank</span>
+                                  ) : (
+                                    <Plus className="h-3.5 w-3.5 text-teal-600" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       );
-                    })
+                    })}
+                    </div>
                   )}
                 </div>
               </div>

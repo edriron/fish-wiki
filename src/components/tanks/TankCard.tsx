@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Fish, Leaf, Droplets, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteTank } from "@/app/actions/tanks";
+import { cn } from "@/lib/utils";
 import type { TankWithCounts } from "@/types/tank";
 
 export function TankCard({ tank }: { tank: TankWithCounts }) {
@@ -23,8 +24,12 @@ export function TankCard({ tank }: { tank: TankWithCounts }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden hover:shadow-md hover:border-teal-200 dark:hover:border-teal-700 transition-all duration-200 flex flex-col">
-      {/* Color bar */}
-      <div className="h-1.5 bg-linear-to-r from-teal-400 to-cyan-500" />
+      {/* Color bar — indicates tank type */}
+      <div className={cn("h-1.5", {
+        "bg-linear-to-r from-teal-400 to-cyan-500": tank.tank_type === "freshwater" || !tank.tank_type,
+        "bg-linear-to-r from-green-400 to-emerald-500": tank.tank_type === "brackish",
+        "bg-linear-to-r from-violet-400 to-purple-500": tank.tank_type === "reef",
+      })} />
 
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2 mb-2">

@@ -23,8 +23,9 @@ export interface TankFishData {
   water_type: string | null;
   diet: string | null;
   difficulty_level: string | null;
-  fish_images: { image_url: string; alt_text: string | null; is_primary: boolean }[];
+  fish_images: { image_url: string; alt_text: string | null; is_primary: boolean; variant_id: string | null }[];
   fish_labels: { label_id: string; labels: TankLabel | null }[];
+  fish_variants: { id: string; name: string }[];
 }
 
 export interface TankFishItem {
@@ -34,6 +35,7 @@ export interface TankFishItem {
   quantity: number;
   quantity_male: number;
   quantity_female: number;
+  variant_id: string | null;
   fish_species: TankFishData;
 }
 
@@ -62,6 +64,7 @@ export interface TankWithCounts {
   name: string;
   description: string | null;
   volume_liters: number | null;
+  tank_type: string;
   created_at: string;
   fishSpeciesCount: number;
   plantSpeciesCount: number;
@@ -72,7 +75,8 @@ export interface FishBasic {
   slug: string;
   common_name: string;
   scientific_name: string;
-  fish_images: { image_url: string; is_primary: boolean }[];
+  fish_images: { image_url: string; is_primary: boolean; variant_id: string | null }[];
+  fish_variants: { id: string; name: string }[];
 }
 
 export interface PlantBasic {

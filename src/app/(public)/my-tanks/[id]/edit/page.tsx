@@ -30,9 +30,10 @@ export default async function TankEditPage({ params }: { params: Promise<{ id: s
     supabase
       .from("tank_fish")
       .select(
-        `id, tank_id, fish_id, quantity, quantity_male, quantity_female,
+        `id, tank_id, fish_id, quantity, quantity_male, quantity_female, variant_id,
         fish_species(id, slug, common_name, scientific_name,
-          fish_images(image_url, is_primary))`,
+          fish_images(image_url, is_primary, variant_id),
+          fish_variants(id, name))`,
       )
       .eq("tank_id", id),
 
@@ -47,7 +48,7 @@ export default async function TankEditPage({ params }: { params: Promise<{ id: s
 
     supabase
       .from("fish_species")
-      .select("id, slug, common_name, scientific_name, fish_images(image_url, is_primary)")
+      .select("id, slug, common_name, scientific_name, fish_images(image_url, is_primary, variant_id), fish_variants(id, name)")
       .eq("published", true)
       .order("common_name"),
 
