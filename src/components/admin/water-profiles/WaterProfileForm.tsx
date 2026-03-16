@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { AiButton } from "@/components/admin/AiButton";
 import {
   createWaterProfile,
   updateWaterProfile,
@@ -171,7 +170,6 @@ export function WaterProfileForm({ profile }: WaterProfileFormProps) {
               <label className="text-sm font-medium text-slate-700">
                 Profile Name <span className="text-red-500">*</span>
               </label>
-              <AiButton label="Auto-fill with AI" />
             </div>
             <input
               type="text"

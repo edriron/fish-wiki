@@ -68,6 +68,7 @@ export interface TankWithCounts {
   tank_type: string;
   created_at: string;
   fishSpeciesCount: number;
+  fishTotalCount: number;
   plantSpeciesCount: number;
 }
 

@@ -53,7 +53,10 @@ export function TankCard({ tank }: { tank: TankWithCounts }) {
         <div className="flex items-center gap-4 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
           <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
             <Fish className="h-4 w-4 text-blue-400" />
-            {tank.fishSpeciesCount} species
+            {tank.fishTotalCount} fish
+            {tank.fishSpeciesCount > 0 && (
+              <span className="text-xs text-slate-400">({tank.fishSpeciesCount} sp.)</span>
+            )}
           </span>
           <span className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-400">
             <Leaf className="h-4 w-4 text-green-400" />

@@ -21,21 +21,25 @@ export default async function MyTanksPage() {
   const tankIds = tanks?.map((t) => t.id) ?? [];
   const [{ data: fishRows }, { data: plantRows }] = await Promise.all([
     tankIds.length > 0
-      ? supabase.from("tank_fish").select("tank_id").in("tank_id", tankIds)
+      ? supabase.from("tank_fish").select("tank_id, quantity").in("tank_id", tankIds)
       : Promise.resolve({ data: [] }),
     tankIds.length > 0
       ? supabase.from("tank_plants").select("tank_id").in("tank_id", tankIds)
       : Promise.resolve({ data: [] }),
   ]);
 
-  const fishMap = new Map<string, number>();
-  for (const r of fishRows ?? []) fishMap.set(r.tank_id, (fishMap.get(r.tank_id) ?? 0) + 1);
+  const fishMap = new Map<string, { species: number; total: number }>();
+  for (const r of fishRows ?? []) {
+    const cur = fishMap.get(r.tank_id) ?? { species: 0, total: 0 };
+    fishMap.set(r.tank_id, { species: cur.species + 1, total: cur.total + (r.quantity ?? 0) });
+  }
   const plantMap = new Map<string, number>();
   for (const r of plantRows ?? []) plantMap.set(r.tank_id, (plantMap.get(r.tank_id) ?? 0) + 1);
 
   const tanksWithCounts: TankWithCounts[] = (tanks ?? []).map((t) => ({
     ...t,
-    fishSpeciesCount: fishMap.get(t.id) ?? 0,
+    fishSpeciesCount: fishMap.get(t.id)?.species ?? 0,
+    fishTotalCount: fishMap.get(t.id)?.total ?? 0,
     plantSpeciesCount: plantMap.get(t.id) ?? 0,
   }));
 
