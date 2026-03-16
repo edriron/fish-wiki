@@ -4,10 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  User as CircleUser,
+  UserRound,
   LogOut,
   Waves,
-  ChevronDown,
   Sun,
   Moon,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import type { User } from "@supabase/supabase-js";
 function UserMenu() {
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -29,10 +29,14 @@ function UserMenu() {
 
   useEffect(() => {
     setMounted(true);
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      setAuthLoading(false);
+    });
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
+        setAuthLoading(false);
       },
     );
     return () => listener.subscription.unsubscribe();
@@ -60,14 +64,26 @@ function UserMenu() {
     user?.email?.split("@")[0] ??
     "there";
 
+  const initial = displayName.charAt(0).toUpperCase();
+
+  // While auth is loading, show a neutral ghost icon (no flash of wrong state)
+  if (authLoading) {
+    return (
+      <div className="h-9 w-9 rounded-full flex items-center justify-center text-slate-300 dark:text-slate-600 pointer-events-none">
+        <UserRound className="h-5 w-5" />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div ref={menuRef} className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
           className="h-9 w-9 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="Account"
         >
-          <CircleUser className="h-5 w-5" />
+          <UserRound className="h-5 w-5" />
         </button>
 
         {open && mounted && (
@@ -87,11 +103,7 @@ function UserMenu() {
                 onClick={() => setTheme(isDark ? "light" : "dark")}
                 className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                {isDark ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {isDark ? "Light mode" : "Dark mode"}
               </button>
             </div>
@@ -105,15 +117,10 @@ function UserMenu() {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 h-9 px-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+        className="h-9 w-9 rounded-full bg-teal-600 hover:bg-teal-700 flex items-center justify-center text-white text-sm font-semibold transition-colors shadow-sm"
+        aria-label="Account menu"
       >
-        <CircleUser className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-        <ChevronDown
-          className={cn(
-            "h-3.5 w-3.5 text-slate-400 transition-transform duration-200",
-            open && "rotate-180",
-          )}
-        />
+        {initial}
       </button>
 
       {open && (
@@ -121,7 +128,7 @@ function UserMenu() {
           {/* Greeting */}
           <div className="px-4 py-2.5 border-b border-slate-100 dark:border-slate-700">
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
-              Hello, {displayName} 👋
+              Hello, {displayName}
             </p>
           </div>
 

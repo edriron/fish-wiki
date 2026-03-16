@@ -1,12 +1,30 @@
+"use client";
+
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Fish, Leaf, Droplets, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Fish, Leaf, Droplets, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { deleteTank } from "@/app/actions/tanks";
 import type { TankWithCounts } from "@/types/tank";
 
 export function TankCard({ tank }: { tank: TankWithCounts }) {
+  const [confirm, setConfirm] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      await deleteTank(tank.id);
+      toast.success("Tank deleted.");
+      router.refresh();
+    });
+  };
+
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden hover:shadow-md hover:border-teal-200 dark:hover:border-teal-700 transition-all duration-200 flex flex-col">
       {/* Color bar */}
-      <div className="h-1.5 bg-gradient-to-r from-teal-400 to-cyan-500" />
+      <div className="h-1.5 bg-linear-to-r from-teal-400 to-cyan-500" />
 
       <div className="p-5 flex-1 flex flex-col">
         <div className="flex items-start justify-between gap-2 mb-2">
@@ -52,6 +70,30 @@ export function TankCard({ tank }: { tank: TankWithCounts }) {
         >
           <Pencil className="h-4 w-4" />
         </Link>
+        {confirm ? (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="rounded-xl bg-red-600 px-2.5 py-2 text-xs font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              Sure?
+            </button>
+            <button
+              onClick={() => setConfirm(false)}
+              className="rounded-xl border border-slate-200 dark:border-slate-600 px-2.5 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              No
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirm(true)}
+            className="rounded-xl border border-slate-200 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   );

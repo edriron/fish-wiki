@@ -25,7 +25,7 @@ export default async function TankViewPage({ params }: { params: Promise<{ id: s
       supabase
         .from("tank_fish")
         .select(
-          `id, tank_id, fish_id, quantity, notes,
+          `id, tank_id, fish_id, quantity,
           fish_species(
             id, slug, common_name, scientific_name, water_type, diet, difficulty_level, max_size_cm,
             fish_images(image_url, alt_text, is_primary),
@@ -38,7 +38,7 @@ export default async function TankViewPage({ params }: { params: Promise<{ id: s
       supabase
         .from("tank_plants")
         .select(
-          `id, tank_id, plant_id, quantity, notes,
+          `id, tank_id, plant_id, quantity,
           plant_species(
             id, slug, common_name, scientific_name, type, water_type, difficulty, light_requirement,
             plant_images(image_url, alt_text, is_primary)

@@ -33,7 +33,6 @@ export interface TankFishItem {
   tank_id: string;
   fish_id: string;
   quantity: number;
-  notes: string | null;
   fish_species: TankFishData;
 }
 
@@ -54,7 +53,6 @@ export interface TankPlantItem {
   tank_id: string;
   plant_id: string;
   quantity: number;
-  notes: string | null;
   plant_species: TankPlantData;
 }
 

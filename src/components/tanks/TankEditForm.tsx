@@ -99,7 +99,8 @@ export function TankEditForm({
   const [fishEntries, setFishEntries] = useState<FishEntry[]>(() =>
     initialFish
       .map((tf) => {
-        const fish = fishMap.get(tf.fish_id);
+        // Use the joined fish_species data directly — avoids depending on allFish being published
+        const fish = (tf.fish_species as unknown as FishBasic) ?? fishMap.get(tf.fish_id);
         if (!fish) return null;
         return { fishId: tf.fish_id, quantity: tf.quantity, fish };
       })
@@ -108,7 +109,7 @@ export function TankEditForm({
   const [plantEntries, setPlantEntries] = useState<PlantEntry[]>(() =>
     initialPlants
       .map((tp) => {
-        const plant = plantMap.get(tp.plant_id);
+        const plant = (tp.plant_species as unknown as PlantBasic) ?? plantMap.get(tp.plant_id);
         if (!plant) return null;
         return { plantId: tp.plant_id, quantity: tp.quantity, plant };
       })
