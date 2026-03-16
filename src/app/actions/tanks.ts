@@ -69,7 +69,7 @@ export async function deleteTank(id: string) {
 
 export async function saveTankContents(
   tankId: string,
-  fish: { fishId: string; quantity: number }[],
+  fish: { fishId: string; quantity: number; male: number; female: number }[],
   plants: { plantId: string; quantity: number }[],
 ) {
   const supabase = await createClient();
@@ -92,7 +92,13 @@ export async function saveTankContents(
   await supabase.from("tank_fish").delete().eq("tank_id", tankId);
   if (fish.length > 0) {
     const { error } = await supabase.from("tank_fish").insert(
-      fish.map((f) => ({ tank_id: tankId, fish_id: f.fishId, quantity: f.quantity })),
+      fish.map((f) => ({
+        tank_id: tankId,
+        fish_id: f.fishId,
+        quantity: f.quantity,
+        quantity_male: f.male,
+        quantity_female: f.female,
+      })),
     );
     if (error) return { error: error.message };
   }

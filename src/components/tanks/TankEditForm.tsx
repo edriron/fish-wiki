@@ -36,6 +36,8 @@ interface Props {
 interface FishEntry {
   fishId: string;
   quantity: number;
+  male: number;
+  female: number;
   fish: FishBasic;
 }
 interface PlantEntry {
@@ -99,10 +101,15 @@ export function TankEditForm({
   const [fishEntries, setFishEntries] = useState<FishEntry[]>(() =>
     initialFish
       .map((tf) => {
-        // Use the joined fish_species data directly — avoids depending on allFish being published
         const fish = (tf.fish_species as unknown as FishBasic) ?? fishMap.get(tf.fish_id);
         if (!fish) return null;
-        return { fishId: tf.fish_id, quantity: tf.quantity, fish };
+        return {
+          fishId: tf.fish_id,
+          quantity: tf.quantity,
+          male: tf.quantity_male ?? 0,
+          female: tf.quantity_female ?? 0,
+          fish,
+        };
       })
       .filter(Boolean) as FishEntry[],
   );
@@ -146,12 +153,32 @@ export function TankEditForm({
   }, [allPlants, addedPlantIds, plantSearch]);
 
   const addFish = (f: FishBasic) =>
-    setFishEntries((prev) => [...prev, { fishId: f.id, quantity: 1, fish: f }]);
+    setFishEntries((prev) => [...prev, { fishId: f.id, quantity: 1, male: 0, female: 0, fish: f }]);
   const removeFish = (id: string) => setFishEntries((prev) => prev.filter((e) => e.fishId !== id));
   const changeFishQty = (id: string, delta: number) =>
     setFishEntries((prev) =>
+      prev.map((e) => {
+        if (e.fishId !== id) return e;
+        const qty = Math.max(1, e.quantity + delta);
+        const male = Math.min(e.male, qty);
+        const female = Math.min(e.female, qty - male);
+        return { ...e, quantity: qty, male, female };
+      }),
+    );
+  const changeFishMale = (id: string, delta: number) =>
+    setFishEntries((prev) =>
       prev.map((e) =>
-        e.fishId === id ? { ...e, quantity: Math.max(1, e.quantity + delta) } : e,
+        e.fishId === id
+          ? { ...e, male: Math.max(0, Math.min(e.quantity - e.female, e.male + delta)) }
+          : e,
+      ),
+    );
+  const changeFishFemale = (id: string, delta: number) =>
+    setFishEntries((prev) =>
+      prev.map((e) =>
+        e.fishId === id
+          ? { ...e, female: Math.max(0, Math.min(e.quantity - e.male, e.female + delta)) }
+          : e,
       ),
     );
 
@@ -188,7 +215,7 @@ export function TankEditForm({
       // Save contents
       const contentsResult = await saveTankContents(
         tankId,
-        fishEntries.map((e) => ({ fishId: e.fishId, quantity: e.quantity })),
+        fishEntries.map((e) => ({ fishId: e.fishId, quantity: e.quantity, male: e.male, female: e.female })),
         plantEntries.map((e) => ({ plantId: e.plantId, quantity: e.quantity })),
       );
       if (contentsResult?.error) {
@@ -327,47 +354,55 @@ export function TankEditForm({
                     const img =
                       entry.fish.fish_images.find((i) => i.is_primary)?.image_url ??
                       entry.fish.fish_images[0]?.image_url ?? null;
+                    const unknown = entry.quantity - entry.male - entry.female;
+                    const btnSm = "h-5 w-5 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs leading-none";
                     return (
                       <div
                         key={entry.fishId}
-                        className="flex items-center gap-3 rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 p-2.5"
+                        className="rounded-lg border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50 p-2.5"
                       >
-                        <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0">
-                          <ThumbImage src={img} alt={entry.fish.common_name} />
+                        {/* Main row */}
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0">
+                            <ThumbImage src={img} alt={entry.fish.common_name} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                              {entry.fish.common_name}
+                            </p>
+                            <p className="text-xs italic text-slate-400 truncate">
+                              {entry.fish.scientific_name}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onClick={() => changeFishQty(entry.fishId, -1)}
+                              className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
+                              {entry.quantity}
+                            </span>
+                            <button type="button" onClick={() => changeFishQty(entry.fishId, 1)}
+                              className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                            <button type="button" onClick={() => removeFish(entry.fishId)}
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-1">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                            {entry.fish.common_name}
-                          </p>
-                          <p className="text-xs italic text-slate-400 truncate">
-                            {entry.fish.scientific_name}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => changeFishQty(entry.fishId, -1)}
-                            className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="w-8 text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
-                            {entry.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => changeFishQty(entry.fishId, 1)}
-                            className="h-7 w-7 rounded-md border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeFish(entry.fishId)}
-                            className="h-7 w-7 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-1"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
+                        {/* Gender strip */}
+                        <div className="flex items-center gap-2 mt-2 pl-[52px]">
+                          <span className="text-xs text-blue-500">♂</span>
+                          <button type="button" onClick={() => changeFishMale(entry.fishId, -1)} className={btnSm}>−</button>
+                          <span className="w-4 text-center text-xs font-medium text-slate-700 dark:text-slate-300">{entry.male}</span>
+                          <button type="button" onClick={() => changeFishMale(entry.fishId, 1)} className={btnSm}>+</button>
+                          <span className="text-xs text-pink-500 ml-2">♀</span>
+                          <button type="button" onClick={() => changeFishFemale(entry.fishId, -1)} className={btnSm}>−</button>
+                          <span className="w-4 text-center text-xs font-medium text-slate-700 dark:text-slate-300">{entry.female}</span>
+                          <button type="button" onClick={() => changeFishFemale(entry.fishId, 1)} className={btnSm}>+</button>
+                          <span className="text-xs text-slate-400 ml-2">? <span className="font-medium text-slate-500 dark:text-slate-400">{unknown}</span></span>
                         </div>
                       </div>
                     );

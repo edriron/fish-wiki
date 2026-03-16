@@ -30,7 +30,7 @@ export default async function TankEditPage({ params }: { params: Promise<{ id: s
     supabase
       .from("tank_fish")
       .select(
-        `id, tank_id, fish_id, quantity,
+        `id, tank_id, fish_id, quantity, quantity_male, quantity_female,
         fish_species(id, slug, common_name, scientific_name,
           fish_images(image_url, is_primary))`,
       )

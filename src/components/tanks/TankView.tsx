@@ -140,11 +140,19 @@ function TableView({
                   </span>
                 </td>
                 <td className="px-4 py-3 hidden md:table-cell text-xs text-slate-500 dark:text-slate-400">
-                  {f.diet && <span className="mr-2">{f.diet}</span>}
-                  {f.max_size_cm && <span>{f.max_size_cm} cm</span>}
+                  {f.diet && <span>{f.diet}</span>}
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-slate-100">
-                  {tf.quantity}
+                <td className="px-4 py-3 text-right">
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">{tf.quantity}</span>
+                  {(tf.quantity_male > 0 || tf.quantity_female > 0) && (
+                    <div className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">
+                      {tf.quantity_male > 0 && <span className="text-blue-400">♂{tf.quantity_male}</span>}
+                      {tf.quantity_female > 0 && <span className="text-pink-400 ml-1">♀{tf.quantity_female}</span>}
+                      {tf.quantity - tf.quantity_male - tf.quantity_female > 0 && (
+                        <span className="ml-1">?{tf.quantity - tf.quantity_male - tf.quantity_female}</span>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             );
@@ -257,9 +265,15 @@ function CategoryView({
                     </p>
                     <p className="text-xs italic text-slate-400 truncate">{f.scientific_name}</p>
                   </div>
-                  <span className="shrink-0 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    ×{tf.quantity}
-                  </span>
+                  <div className="shrink-0 text-right">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">×{tf.quantity}</span>
+                    {(tf.quantity_male > 0 || tf.quantity_female > 0) && (
+                      <div className="text-xs mt-0.5 whitespace-nowrap">
+                        {tf.quantity_male > 0 && <span className="text-blue-400">♂{tf.quantity_male}</span>}
+                        {tf.quantity_female > 0 && <span className="text-pink-400 ml-0.5">♀{tf.quantity_female}</span>}
+                      </div>
+                    )}
+                  </div>
                 </Link>
               );
             })}
