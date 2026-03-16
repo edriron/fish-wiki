@@ -16,12 +16,12 @@ export default async function EditLabelPage({
   const [{ data: label }, { data: allLabels }] = await Promise.all([
     supabase
       .from("labels")
-      .select("id, name, color, parent_id")
+      .select("id, name, color, parent_id, is_grouping")
       .eq("id", id)
       .single(),
     supabase
       .from("labels")
-      .select("id, name, color, parent_id")
+      .select("id, name, color, parent_id, is_grouping")
       .order("name"),
   ]);
 

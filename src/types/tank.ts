@@ -13,6 +13,7 @@ export interface TankLabel {
   name: string;
   color: string | null;
   parent_id: string | null;
+  is_grouping: boolean;
 }
 
 export interface TankFishData {

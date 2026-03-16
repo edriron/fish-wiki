@@ -11,6 +11,7 @@ interface Label {
   name: string;
   color: string | null;
   parent_id: string | null;
+  is_grouping: boolean;
 }
 
 interface LabelFormProps {
@@ -81,6 +82,7 @@ export function LabelForm({ label, allLabels }: LabelFormProps) {
   const [name, setName] = useState(label?.name ?? "");
   const [color, setColor] = useState(label?.color ?? "");
   const [parentId, setParentId] = useState(label?.parent_id ?? "");
+  const [isGrouping, setIsGrouping] = useState(label?.is_grouping ?? true);
 
   const parentOptions = buildTreeOptions(allLabels, label?.id);
 
@@ -92,6 +94,7 @@ export function LabelForm({ label, allLabels }: LabelFormProps) {
     formData.set("name", name);
     formData.set("color", color);
     formData.set("parent_id", parentId);
+    formData.set("is_grouping", String(isGrouping));
 
     startTransition(async () => {
       if (isEdit && label) {
@@ -174,6 +177,34 @@ export function LabelForm({ label, allLabels }: LabelFormProps) {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Grouping toggle */}
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 px-4 py-3">
+            <div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Use as grouping category
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                On — fish are grouped by this label in tank view (e.g. Cichlid, Catfish).
+                Off — shown as a badge instead (e.g. Aggressive, Community Safe).
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isGrouping}
+              onClick={() => setIsGrouping((v) => !v)}
+              className={`relative ml-4 shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                isGrouping ? "bg-teal-600" : "bg-slate-300 dark:bg-slate-600"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  isGrouping ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           </div>
 
           {/* Color */}

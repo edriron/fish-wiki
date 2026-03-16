@@ -3,6 +3,7 @@ export interface FishLabel {
   name: string;
   color: string | null;
   parent_id: string | null;
+  is_grouping: boolean;
 }
 
 export interface FishImage {

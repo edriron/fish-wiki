@@ -29,7 +29,7 @@ export default async function TankViewPage({ params }: { params: Promise<{ id: s
           fish_species(
             id, slug, common_name, scientific_name, water_type, diet, difficulty_level,
             fish_images(image_url, alt_text, is_primary, variant_id),
-            fish_labels(label_id, labels(id, name, color, parent_id)),
+            fish_labels(label_id, labels(id, name, color, parent_id, is_grouping)),
             fish_variants(id, name)
           )`,
         )
@@ -48,7 +48,7 @@ export default async function TankViewPage({ params }: { params: Promise<{ id: s
         .eq("tank_id", id)
         .order("plant_id"),
 
-      supabase.from("labels").select("id, name, color, parent_id"),
+      supabase.from("labels").select("id, name, color, parent_id, is_grouping"),
     ]);
 
   if (!tank) notFound();

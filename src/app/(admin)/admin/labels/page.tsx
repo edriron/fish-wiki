@@ -8,6 +8,7 @@ interface Label {
   name: string;
   color: string | null;
   parent_id: string | null;
+  is_grouping: boolean;
 }
 
 function buildTreeRows(labels: Label[]): { label: Label; depth: number }[] {
@@ -29,7 +30,7 @@ export default async function AdminLabelsPage() {
 
   const { data: labels } = await supabase
     .from("labels")
-    .select("id, name, color, parent_id")
+    .select("id, name, color, parent_id, is_grouping")
     .order("name");
 
   const rows = buildTreeRows(labels ?? []);
@@ -69,6 +70,7 @@ export default async function AdminLabelsPage() {
                 <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-left">
                   <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Label</th>
                   <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Color</th>
+                  <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">Type</th>
                   <th className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400 text-right">
                     Actions
                   </th>
@@ -112,6 +114,15 @@ export default async function AdminLabelsPage() {
                       ) : (
                         <span className="text-slate-300 dark:text-slate-600">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                        label.is_grouping
+                          ? "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400"
+                          : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                      }`}>
+                        {label.is_grouping ? "Grouping" : "Badge"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">

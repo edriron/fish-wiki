@@ -44,6 +44,29 @@ function getRootLabel(labelId: string, labels: TankLabel[]): TankLabel | null {
   return cur;
 }
 
+// First label whose root has is_grouping=true
+function getGroupingRoot(fishLabels: TankLabel[], allLabels: TankLabel[]): TankLabel | null {
+  for (const label of fishLabels) {
+    const root = getRootLabel(label.id, allLabels) ?? label;
+    if (root.is_grouping) return root;
+  }
+  return null;
+}
+
+// All non-grouping root labels for a fish (shown as chips)
+function getBadgeLabels(fishLabels: TankLabel[], allLabels: TankLabel[]): TankLabel[] {
+  const seen = new Set<string>();
+  const result: TankLabel[] = [];
+  for (const label of fishLabels) {
+    const root = getRootLabel(label.id, allLabels) ?? label;
+    if (!root.is_grouping && !seen.has(root.id)) {
+      seen.add(root.id);
+      result.push(root);
+    }
+  }
+  return result;
+}
+
 function FishImage({ src, alt }: { src: string | null; alt: string }) {
   const [err, setErr] = useState(false);
   if (!src || err)
@@ -238,16 +261,11 @@ function CategoryView({
       const labels = tf.fish_species.fish_labels
         .map((fl) => fl.labels)
         .filter(Boolean) as TankLabel[];
-      if (labels.length === 0) {
-        const existing = map.get("__none__");
-        if (existing) existing.fish.push(tf);
-        else map.set("__none__", { label: null, fish: [tf] });
-      } else {
-        const root = getRootLabel(labels[0].id, allLabels) ?? labels[0];
-        const existing = map.get(root.id);
-        if (existing) existing.fish.push(tf);
-        else map.set(root.id, { label: root, fish: [tf] });
-      }
+      const groupRoot = getGroupingRoot(labels, allLabels);
+      const key = groupRoot?.id ?? "__none__";
+      const existing = map.get(key);
+      if (existing) existing.fish.push(tf);
+      else map.set(key, { label: groupRoot, fish: [tf] });
     }
     return Array.from(map.values());
   }, [fish, allLabels]);
@@ -273,6 +291,10 @@ function CategoryView({
               const variantName = tf.variant_id
                 ? (f.fish_variants.find((v) => v.id === tf.variant_id)?.name ?? "Variant")
                 : null;
+              const allFishLabels = tf.fish_species.fish_labels
+                .map((fl) => fl.labels)
+                .filter(Boolean) as TankLabel[];
+              const badgeLabels = getBadgeLabels(allFishLabels, allLabels);
               return (
                 <Link
                   key={tf.id}
@@ -294,6 +316,23 @@ function CategoryView({
                       )}
                     </div>
                     <p className="text-xs italic text-slate-400 truncate">{f.scientific_name}</p>
+                    {badgeLabels.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {badgeLabels.map((bl) => (
+                          <span
+                            key={bl.id}
+                            className="rounded-full border px-2 py-0.5 text-xs leading-none"
+                            style={
+                              bl.color
+                                ? { backgroundColor: `${bl.color}20`, color: bl.color, borderColor: `${bl.color}40` }
+                                : undefined
+                            }
+                          >
+                            {bl.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 text-right">
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">×{tf.quantity}</span>

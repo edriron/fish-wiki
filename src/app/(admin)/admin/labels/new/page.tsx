@@ -7,7 +7,7 @@ export default async function NewLabelPage() {
   const supabase = await createClient();
   const { data: allLabels } = await supabase
     .from("labels")
-    .select("id, name, color, parent_id")
+    .select("id, name, color, parent_id, is_grouping")
     .order("name");
 
   return (
