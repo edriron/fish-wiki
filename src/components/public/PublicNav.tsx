@@ -3,13 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  UserRound,
-  LogOut,
-  Waves,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { UserRound, LogOut, Waves, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Logo } from "../icons/Logo";
@@ -64,8 +58,6 @@ function UserMenu() {
     user?.email?.split("@")[0] ??
     "there";
 
-  const initial = displayName.charAt(0).toUpperCase();
-
   // While auth is loading, show a neutral ghost icon (no flash of wrong state)
   if (authLoading) {
     return (
@@ -103,7 +95,11 @@ function UserMenu() {
                 onClick={() => setTheme(isDark ? "light" : "dark")}
                 className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {isDark ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
                 {isDark ? "Light mode" : "Dark mode"}
               </button>
             </div>
@@ -117,10 +113,10 @@ function UserMenu() {
     <div ref={menuRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="h-9 w-9 rounded-full bg-teal-600 hover:bg-teal-700 flex items-center justify-center text-white text-sm font-semibold transition-colors shadow-sm"
+        className="h-9 w-9 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         aria-label="Account menu"
       >
-        {initial}
+        <UserRound className="h-5 w-5" />
       </button>
 
       {open && (
