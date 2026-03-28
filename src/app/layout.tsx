@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   description: "A comprehensive fish species wiki",
   icons: {
     icon: "/logo.ico",
-    apple: "/logo.ico",
+    apple: "/logo-180.png",
   },
 };
 
