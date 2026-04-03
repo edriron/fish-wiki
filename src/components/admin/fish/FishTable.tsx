@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Pencil, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Pencil, ArrowUpDown, ArrowUp, ArrowDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PublishToggle } from "./PublishToggle";
 import { FishDeleteButton } from "./FishDeleteButton";
@@ -14,9 +14,51 @@ type Fish = {
   scientific_name: string | null;
   water_type: string | null;
   difficulty_level: string | null;
+  diet: string | null;
+  description: string | null;
+  origin_region: string | null;
   published: boolean;
   updated_at: string;
+  label_count: number;
+  image_count: number;
 };
+
+type MissingFilter =
+  | "missing_slug"
+  | "missing_scientific_name"
+  | "missing_description"
+  | "missing_origin_region"
+  | "missing_classification"
+  | "no_labels"
+  | "no_images"
+  | "any_missing";
+
+const MISSING_FILTERS: { key: MissingFilter; label: string }[] = [
+  { key: "missing_slug", label: "No Slug" },
+  { key: "missing_scientific_name", label: "No Scientific Name" },
+  { key: "missing_description", label: "No Description" },
+  { key: "missing_origin_region", label: "No Origin Region" },
+  { key: "missing_classification", label: "No Classification" },
+  { key: "no_labels", label: "No Labels" },
+  { key: "no_images", label: "No Images" },
+  { key: "any_missing", label: "Any Missing Data" },
+];
+
+function isMissingData(f: Fish, filter: MissingFilter): boolean {
+  switch (filter) {
+    case "missing_slug": return !f.slug;
+    case "missing_scientific_name": return !f.scientific_name;
+    case "missing_description": return !f.description;
+    case "missing_origin_region": return !f.origin_region;
+    case "missing_classification": return !f.water_type || !f.difficulty_level || !f.diet;
+    case "no_labels": return f.label_count === 0;
+    case "no_images": return f.image_count === 0;
+    case "any_missing":
+      return !f.slug || !f.scientific_name || !f.description || !f.origin_region ||
+        !f.water_type || !f.difficulty_level || !f.diet ||
+        f.label_count === 0 || f.image_count === 0;
+  }
+}
 
 type SortKey = "common_name" | "scientific_name" | "water_type" | "difficulty_level" | "published" | "updated_at";
 type SortDir = "asc" | "desc";
@@ -64,6 +106,7 @@ export function FishTable({ fish }: { fish: Fish[] }) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("updated_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [missingFilter, setMissingFilter] = useState<MissingFilter | null>(null);
 
   const handleSort = (col: SortKey) => {
     if (sortKey === col) {
@@ -75,10 +118,12 @@ export function FishTable({ fish }: { fish: Fish[] }) {
   };
 
   const filtered = useMemo(() => {
+    let result = fish;
     const q = search.toLowerCase().trim();
-    if (!q) return fish;
-    return fish.filter((f) => f.common_name.toLowerCase().includes(q));
-  }, [fish, search]);
+    if (q) result = result.filter((f) => f.common_name.toLowerCase().includes(q));
+    if (missingFilter) result = result.filter((f) => isMissingData(f, missingFilter));
+    return result;
+  }, [fish, search, missingFilter]);
 
   const sorted = useMemo(() => {
     return [...filtered].sort((a, b) => {
@@ -116,11 +161,38 @@ export function FishTable({ fish }: { fish: Fish[] }) {
             className="h-9 w-64 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 pl-8 pr-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
-        {search && (
+        {(search || missingFilter) && (
           <span className="text-sm text-slate-400 dark:text-slate-500">
             {sorted.length} of {fish.length} shown
           </span>
         )}
+      </div>
+
+      {/* Missing data filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 shrink-0">Filter:</span>
+        {MISSING_FILTERS.map(({ key, label }) => {
+          const isAny = key === "any_missing";
+          const active = missingFilter === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setMissingFilter(active ? null : key)}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-all",
+                active
+                  ? isAny
+                    ? "border-red-400 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 dark:border-red-600"
+                    : "border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-600"
+                  : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500 hover:text-slate-700 dark:hover:text-slate-300",
+              )}
+            >
+              {label}
+              {active && <X className="h-3 w-3 ml-0.5" />}
+            </button>
+          );
+        })}
       </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">

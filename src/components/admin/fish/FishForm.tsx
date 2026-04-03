@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Save, Loader2, AlertCircle } from "lucide-react";
+import { Save, Loader2, AlertCircle, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { toSlug } from "@/lib/slug";
@@ -94,6 +94,8 @@ export function FishForm({
   const [published, setPublished] = useState(fish?.published ?? false);
   const [selectedLabels, setSelectedLabels] =
     useState<string[]>(selectedLabelIds);
+  const [isAiLabelsLoading, setIsAiLabelsLoading] = useState(false);
+  const [labelsVisible, setLabelsVisible] = useState(!isEdit);
 
   const handleCommonNameChange = (value: string) => {
     setCommonName(value);
@@ -175,6 +177,47 @@ export function FishForm({
 
   const toTitleCase = (str: string) =>
     str.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
+  const handleAiLabelsFill = async () => {
+    setIsAiLabelsLoading(true);
+    try {
+      const fishIdentifier = scientificName
+        ? `${commonName} (${scientificName})`
+        : commonName;
+
+      const result = await generateFishData(
+        fishIdentifier,
+        waterProfiles.map((wp) => ({ id: wp.id, name: wp.name })),
+        allLabels.map((l) => ({ id: l.id, name: l.name, parent_id: l.parent_id })),
+      );
+
+      if (result?.warnings?.length) {
+        for (const w of result.warnings) toast.warning(w);
+      }
+
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if (result.data?.label_ids?.length) {
+        const allSuggested = [
+          ...new Set(
+            result.data.label_ids.flatMap((id) => [id, ...getAncestorIds(id, allLabels)]),
+          ),
+        ];
+        setSelectedLabels(allSuggested);
+        toast.success("Labels filled with AI.");
+      } else {
+        setSelectedLabels([]);
+        toast.success("AI found no matching labels.");
+      }
+    } catch {
+      toast.error("AI label generation failed.");
+    } finally {
+      setIsAiLabelsLoading(false);
+    }
+  };
 
   const handleAiFill = async () => {
     if (!commonName) {
@@ -490,41 +533,64 @@ export function FishForm({
       {allLabels.length > 0 && (
         <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
           <div className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 px-6 py-3">
-            <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-              Labels
-            </h2>
-          </div>
-          <div className="px-6 py-5 space-y-1">
-            {buildLabelTree(allLabels).map(({ label, depth }) => {
-              const selected = selectedLabels.includes(label.id);
-              return (
-                <div key={label.id} style={{ paddingLeft: depth * 20 }} className="flex items-center gap-1.5">
-                  {depth > 0 && (
-                    <span className="text-slate-300 dark:text-slate-600 text-xs select-none shrink-0">└</span>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                Labels
+              </h2>
+              <div className="flex items-center gap-2">
+                <AiButton
+                  label="Fill Labels with AI"
+                  onClick={handleAiLabelsFill}
+                  loading={isAiLabelsLoading}
+                  disabled={!commonName || !scientificName}
+                />
+                <button
+                  type="button"
+                  onClick={() => setLabelsVisible((v) => !v)}
+                  className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-600 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  {labelsVisible ? (
+                    <><ChevronUp className="h-3.5 w-3.5" /> Hide</>
+                  ) : (
+                    <><ChevronDown className="h-3.5 w-3.5" /> Show</>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => toggleLabel(label.id)}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-sm font-medium transition-all cursor-pointer",
-                      selected
-                        ? "bg-teal-600 border-teal-600 text-white shadow-sm"
-                        : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400",
-                    )}
-                    style={
-                      selected && label.color
-                        ? { backgroundColor: label.color, borderColor: label.color }
-                        : !selected && label.color
-                          ? { borderColor: `${label.color}60`, color: label.color }
-                          : undefined
-                    }
-                  >
-                    {label.name}
-                  </button>
-                </div>
-              );
-            })}
+                </button>
+              </div>
+            </div>
           </div>
+          {labelsVisible && (
+            <div className="px-6 py-5 space-y-1">
+              {buildLabelTree(allLabels).map(({ label, depth }) => {
+                const selected = selectedLabels.includes(label.id);
+                return (
+                  <div key={label.id} style={{ paddingLeft: depth * 20 }} className="flex items-center gap-1.5">
+                    {depth > 0 && (
+                      <span className="text-slate-300 dark:text-slate-600 text-xs select-none shrink-0">└</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      className={cn(
+                        "rounded-full border px-3 py-1 text-sm font-medium transition-all cursor-pointer",
+                        selected
+                          ? "bg-teal-600 border-teal-600 text-white shadow-sm"
+                          : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-300 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400",
+                      )}
+                      style={
+                        selected && label.color
+                          ? { backgroundColor: label.color, borderColor: label.color }
+                          : !selected && label.color
+                            ? { borderColor: `${label.color}60`, color: label.color }
+                            : undefined
+                      }
+                    >
+                      {label.name}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
       )}
 

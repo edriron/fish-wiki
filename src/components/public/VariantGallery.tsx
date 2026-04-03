@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { Fish, X } from "lucide-react";
+import { Fish, X, LayoutGrid, LayoutList } from "lucide-react";
 import type { FishImage, FishVariant } from "@/types/fish";
 
 function GalleryImageItem({
@@ -62,16 +62,31 @@ interface VariantGalleryProps {
   fishName: string;
 }
 
+type ViewMode = "cards" | "sections";
+const GALLERY_VIEW_KEY = "fish-gallery-view";
+
 export function VariantGallery({ images, variants, fishName }: VariantGalleryProps) {
   const [selectedVariant, setSelectedVariant] = useState<string | null>(null);
   const [lightboxImg, setLightboxImg] = useState<FishImage | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+
+  // Hydrate view preference from localStorage after mount
+  useEffect(() => {
+    const saved = localStorage.getItem(GALLERY_VIEW_KEY) as ViewMode | null;
+    if (saved === "cards" || saved === "sections") setViewMode(saved);
+  }, []);
+
+  const handleViewChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(GALLERY_VIEW_KEY, mode);
+  };
 
   const hasVariants = variants.length > 0;
 
   // "Standard" = images with no variant_id
   const baseImages = images.filter((img) => img.variant_id === null);
 
-  // Current tab images
+  // Current tab images (cards view)
   const visibleImages = selectedVariant
     ? images.filter((img) => img.variant_id === selectedVariant)
     : baseImages;
@@ -104,66 +119,139 @@ export function VariantGallery({ images, variants, fishName }: VariantGalleryPro
     ? variants.find((v) => v.id === lightboxImg.variant_id)?.name ?? null
     : null;
 
+  const viewToggle = (
+    <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 dark:border-slate-700 p-0.5">
+      <button
+        type="button"
+        onClick={() => handleViewChange("cards")}
+        title="Cards view"
+        className={cn(
+          "rounded-md p-1.5 transition-colors",
+          viewMode === "cards"
+            ? "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100"
+            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+        )}
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => handleViewChange("sections")}
+        title="Sections view"
+        className={cn(
+          "rounded-md p-1.5 transition-colors",
+          viewMode === "sections"
+            ? "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100"
+            : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+        )}
+      >
+        <LayoutList className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
   return (
     <>
       <section>
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-3">Gallery</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Gallery</h2>
+          {viewToggle}
+        </div>
         <Separator className="mb-4" />
 
-        {/* Variant tabs — only shown when variants exist */}
-        {hasVariants && (
-          <div className="mb-5 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedVariant(null)}
-              className={cn(
-                "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
-                selectedVariant === null
-                  ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-600 dark:hover:text-teal-400"
-              )}
-            >
-              Standard
-            </button>
-
-            {variants.map((v) => (
-              <button
-                key={v.id}
-                onClick={() =>
-                  setSelectedVariant(selectedVariant === v.id ? null : v.id)
-                }
-                className={cn(
-                  "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
-                  selectedVariant === v.id
-                    ? "border-teal-600 bg-teal-600 text-white shadow-sm"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-600 dark:hover:text-teal-400"
-                )}
-              >
-                {v.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Image grid */}
-        {visibleImages.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {visibleImages.map((img) => (
-              <GalleryImageItem
-                key={img.id}
-                img={img}
-                fishName={fishName}
-                onClick={() => setLightboxImg(img)}
-              />
-            ))}
+        {viewMode === "sections" ? (
+          /* Sections view — all variants shown at once */
+          <div className="space-y-6">
+            {hasVariants ? (
+              <>
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-3">
+                    Standard
+                  </h3>
+                  {baseImages.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {baseImages.map((img) => (
+                        <GalleryImageItem key={img.id} img={img} fishName={fishName} onClick={() => setLightboxImg(img)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 dark:text-slate-500 italic">No standard images.</p>
+                  )}
+                </div>
+                {variants.map((v) => {
+                  const variantImages = images.filter((img) => img.variant_id === v.id);
+                  return (
+                    <div key={v.id}>
+                      <h3 className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide mb-3">
+                        {v.name}
+                      </h3>
+                      {variantImages.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          {variantImages.map((img) => (
+                            <GalleryImageItem key={img.id} img={img} fishName={fishName} onClick={() => setLightboxImg(img)} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-400 dark:text-slate-500 italic">No images for this variant.</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {images.map((img) => (
+                  <GalleryImageItem key={img.id} img={img} fishName={fishName} onClick={() => setLightboxImg(img)} />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
-          /* Empty state for a variant that has no images yet */
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-700 dark:bg-slate-900">
-            <Fish className="mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
-            <p className="text-sm text-slate-400 dark:text-slate-500">
-              No images for this variant yet.
-            </p>
-          </div>
+          /* Cards view (original) */
+          <>
+            {/* Variant tabs — only shown when variants exist */}
+            {hasVariants && (
+              <div className="mb-5 flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedVariant(null)}
+                  className={cn(
+                    "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
+                    selectedVariant === null
+                      ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-600 dark:hover:text-teal-400"
+                  )}
+                >
+                  Standard
+                </button>
+                {variants.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setSelectedVariant(selectedVariant === v.id ? null : v.id)}
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-all",
+                      selectedVariant === v.id
+                        ? "border-teal-600 bg-teal-600 text-white shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-600 dark:hover:text-teal-400"
+                    )}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {visibleImages.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {visibleImages.map((img) => (
+                  <GalleryImageItem key={img.id} img={img} fishName={fishName} onClick={() => setLightboxImg(img)} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center dark:border-slate-700 dark:bg-slate-900">
+                <Fish className="mb-2 h-8 w-8 text-slate-300 dark:text-slate-600" />
+                <p className="text-sm text-slate-400 dark:text-slate-500">No images for this variant yet.</p>
+              </div>
+            )}
+          </>
         )}
       </section>
 

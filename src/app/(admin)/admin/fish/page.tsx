@@ -6,9 +6,32 @@ import { FishTable } from "@/components/admin/fish/FishTable";
 export default async function AdminFishPage() {
   const supabase = await createClient();
 
-  const { data: fish } = await supabase
-    .from("fish_species")
-    .select("id, slug, common_name, scientific_name, water_type, difficulty_level, published, updated_at");
+  const [{ data: rawFish }, { data: allFishLabels }, { data: allFishImages }] =
+    await Promise.all([
+      supabase
+        .from("fish_species")
+        .select(
+          "id, slug, common_name, scientific_name, water_type, difficulty_level, diet, description, origin_region, published, updated_at",
+        ),
+      supabase.from("fish_labels").select("fish_id"),
+      supabase.from("fish_images").select("fish_id"),
+    ]);
+
+  // Build count maps
+  const labelCountMap = new Map<string, number>();
+  allFishLabels?.forEach((fl) => {
+    labelCountMap.set(fl.fish_id, (labelCountMap.get(fl.fish_id) ?? 0) + 1);
+  });
+  const imageCountMap = new Map<string, number>();
+  allFishImages?.forEach((fi) => {
+    imageCountMap.set(fi.fish_id, (imageCountMap.get(fi.fish_id) ?? 0) + 1);
+  });
+
+  const fish = rawFish?.map((f) => ({
+    ...f,
+    label_count: labelCountMap.get(f.id) ?? 0,
+    image_count: imageCountMap.get(f.id) ?? 0,
+  }));
 
   return (
     <div>
