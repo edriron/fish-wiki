@@ -235,3 +235,28 @@ export async function updateImageMeta(
   revalidatePath(`/admin/fish/${fishId}/edit`);
   return { success: true };
 }
+
+export async function moveImageVariant(
+  imageId: string,
+  fishId: string,
+  targetVariantId: string | null,
+) {
+  const supabase = await createClient();
+
+  const updates: Record<string, unknown> = { variant_id: targetVariantId };
+  // Moving to a variant clears primary status (primary only applies to base images)
+  if (targetVariantId !== null) {
+    updates.is_primary = false;
+  }
+
+  const { error } = await supabase
+    .from("fish_images")
+    .update(updates)
+    .eq("id", imageId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/fish/${fishId}/edit`);
+  revalidatePath("/wiki");
+  return { success: true };
+}

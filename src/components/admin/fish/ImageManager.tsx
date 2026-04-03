@@ -15,6 +15,7 @@ import {
   X,
   Sparkles,
   Search,
+  ArrowRightLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -24,6 +25,7 @@ import {
   updateImageMeta,
   uploadImageFromUrl,
   replaceImageFile,
+  moveImageVariant,
 } from "@/app/actions/images";
 import { generateFishImageUrls, searchImagesByQuery, searchInaturalistImages } from "@/app/actions/ai";
 import type { FishImage, FishVariant } from "@/types/fish";
@@ -54,20 +56,42 @@ function ImageCard({
   image,
   fishId,
   isBaseImage,
+  variants,
 }: {
   image: FishImage;
   fishId: string;
   isBaseImage: boolean;
+  variants: FishVariant[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const [moveTarget, setMoveTarget] = useState<string>(image.variant_id ?? "");
   const [caption, setCaption] = useState(image.caption ?? "");
   const [altText, setAltText] = useState(image.alt_text ?? "");
   const [frameMode, setFrameMode] = useState<"crop" | "blur">("crop");
 
   const busy = isPending || isSaving;
+
+  const handleMove = () => {
+    const targetId = moveTarget === "" ? null : moveTarget;
+    if (targetId === (image.variant_id ?? null)) {
+      setMoving(false);
+      return;
+    }
+    startTransition(async () => {
+      const result = await moveImageVariant(image.id, fishId, targetId);
+      if (result?.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Image moved.");
+        setMoving(false);
+        router.refresh();
+      }
+    });
+  };
 
   const handleDelete = () => {
     if (!confirm("Delete this image?")) return;
@@ -263,34 +287,82 @@ function ImageCard({
           </>
         )}
 
+        {/* Move to variant */}
+        {moving && (
+          <div className="space-y-1.5 pt-1">
+            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Move to:</label>
+            <select
+              value={moveTarget}
+              onChange={(e) => setMoveTarget(e.target.value)}
+              className="w-full rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
+            >
+              <option value="">Standard (Base)</option>
+              {variants.map((v) => (
+                <option key={v.id} value={v.id}>{v.name}</option>
+              ))}
+            </select>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={handleMove}
+                disabled={busy}
+                className="flex items-center gap-1 rounded bg-teal-600 px-2 py-1 text-xs text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                Move
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMoving(false); setMoveTarget(image.variant_id ?? ""); }}
+                className="flex items-center gap-1 rounded border border-slate-200 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <X className="h-3 w-3" />
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Actions */}
         <div className="flex items-center gap-1 pt-0.5">
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="flex items-center gap-1 rounded border border-slate-200 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            title="Edit"
+            className="flex items-center justify-center rounded border border-slate-200 dark:border-slate-600 p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
-            <Pencil className="h-3 w-3" />
-            Edit
+            <Pencil className="h-3.5 w-3.5" />
           </button>
+          {variants.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { setMoving((m) => !m); setMoveTarget(image.variant_id ?? ""); }}
+              disabled={busy}
+              title="Move to variant"
+              className="flex items-center justify-center rounded border border-slate-200 dark:border-slate-600 p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+            </button>
+          )}
           {isBaseImage && !image.is_primary && (
             <button
               type="button"
               onClick={handleSetPrimary}
               disabled={busy}
-              className="flex items-center gap-1 rounded border border-teal-200 px-2 py-1 text-xs text-teal-700 hover:bg-teal-50 transition-colors"
+              title="Set as primary"
+              className="flex items-center justify-center rounded border border-teal-200 p-1.5 text-teal-700 hover:bg-teal-50 transition-colors"
             >
-              <Star className="h-3 w-3" />
-              Primary
+              <Star className="h-3.5 w-3.5" />
             </button>
           )}
           <button
             type="button"
             onClick={handleDelete}
             disabled={busy}
-            className="ml-auto flex items-center gap-1 rounded border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete"
+            className="ml-auto flex items-center justify-center rounded border border-red-200 p-1.5 text-red-600 hover:bg-red-50 transition-colors"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
@@ -977,6 +1049,7 @@ export function ImageManager({ fishId, scientificName, images, variants }: Image
                 image={img}
                 fishId={fishId}
                 isBaseImage={true}
+                variants={variants}
               />
             ))}
           </div>
@@ -1002,7 +1075,7 @@ export function ImageManager({ fishId, scientificName, images, variants }: Image
                       {variant.name}
                     </p>
                   )}
-                  <ImageCard image={img} fishId={fishId} isBaseImage={false} />
+                  <ImageCard image={img} fishId={fishId} isBaseImage={false} variants={variants} />
                 </div>
               );
             })}
