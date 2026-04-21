@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { UserRound, LogOut, Waves, Sun, Moon } from "lucide-react";
+import { UserRound, LogOut, Waves, Sun, Moon, SquareUserRound, BookOpen, Brain } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { Logo } from "../icons/Logo";
@@ -139,6 +139,15 @@ function UserMenu() {
               My Tanks
             </Link>
 
+            <Link
+              href="/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            >
+              <SquareUserRound className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              My Profile
+            </Link>
+
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
               className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
@@ -171,7 +180,10 @@ function UserMenu() {
 export function PublicNav() {
   const pathname = usePathname();
 
-  const links = [{ href: "/wiki", label: "Wiki", showActive: true }];
+  const links = [
+    { href: "/wiki", label: "Wiki", showActive: true, icon: BookOpen },
+    { href: "/quiz", label: "Quiz", showActive: true, icon: Brain },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white dark:bg-slate-900 dark:border-slate-800">
@@ -185,20 +197,24 @@ export function PublicNav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-md px-4 py-2 text-sm font-medium transition-colors",
-                link.showActive && pathname.startsWith(link.href.split("?")[0])
-                  ? "bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  link.showActive && pathname.startsWith(link.href.split("?")[0])
+                    ? "bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {link.label}
+              </Link>
+            );
+          })}
           <UserMenu />
         </div>
       </nav>
